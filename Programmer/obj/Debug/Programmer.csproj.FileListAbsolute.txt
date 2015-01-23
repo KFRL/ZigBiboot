@@ -1,0 +1,5 @@
+C:\Users\Inshal\Documents\GitHub\Programmer\Programmer\bin\Debug\Programmer.exe
+C:\Users\Inshal\Documents\GitHub\Programmer\Programmer\bin\Debug\Programmer.pdb
+C:\Users\Inshal\Documents\GitHub\Programmer\Programmer\obj\Debug\Programmer.csprojResolveAssemblyReference.cache
+C:\Users\Inshal\Documents\GitHub\Programmer\Programmer\obj\Debug\Programmer.exe
+C:\Users\Inshal\Documents\GitHub\Programmer\Programmer\obj\Debug\Programmer.pdb
