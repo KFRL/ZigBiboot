@@ -1,0 +1,224 @@
+Binary sketch size: 472 bytes (of a 32,256 byte maximum)
+C:\Program Files (x86)\Arduino\hardware/tools/avr/bin/avrdude -CC:\Program Files (x86)\Arduino\hardware/tools/avr/etc/avrdude.conf -v -v -v -v -patmega328p -carduino -P\\.\COM13 -b115200 -D -Uflash:w:C:\Users\Inshal\AppData\Local\Temp\build8644528932518151390.tmp\sketch_jan11a.cpp.hex:i 
+
+avrdude: Version 5.11, compiled on Sep  2 2011 at 19:38:36
+         Copyright (c) 2000-2005 Brian Dean, http://www.bdmicro.com/
+         Copyright (c) 2007-2009 Joerg Wunsch
+
+         System wide configuration file is "C:\Program Files (x86)\Arduino\hardware/tools/avr/etc/avrdude.conf"
+
+         Using Port                    : \\.\COM13
+         Using Programmer              : arduino
+         Overriding Baud Rate          : 115200
+avrdude: Send: 0 [30]   [20] 
+avrdude: Send: 0 [30]   [20] 
+avrdude: Send: 0 [30]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [10] 
+         AVR Part                      : ATMEGA328P
+         Chip Erase delay              : 9000 us
+         PAGEL                         : PD7
+         BS2                           : PC2
+         RESET disposition             : dedicated
+         RETRY pulse                   : SCK
+         serial program mode           : yes
+         parallel program mode         : yes
+         Timeout                       : 200
+         StabDelay                     : 100
+         CmdexeDelay                   : 25
+         SyncLoops                     : 32
+         ByteDelay                     : 0
+         PollIndex                     : 3
+         PollValue                     : 0x53
+         Memory Detail                 :
+
+                                  Block Poll               Page                       Polled
+           Memory Type Mode Delay Size  Indx Paged  Size   Size #Pages MinW  MaxW   ReadBack
+           ----------- ---- ----- ----- ---- ------ ------ ---- ------ ----- ----- ---------
+           eeprom        65    20     4    0 no       1024    4      0  3600  3600 0xff 0xff
+                                  Block Poll               Page                       Polled
+           Memory Type Mode Delay Size  Indx Paged  Size   Size #Pages MinW  MaxW   ReadBack
+           ----------- ---- ----- ----- ---- ------ ------ ---- ------ ----- ----- ---------
+           flash         65     6   128    0 yes     32768  128    256  4500  4500 0xff 0xff
+                                  Block Poll               Page                       Polled
+           Memory Type Mode Delay Size  Indx Paged  Size   Size #Pages MinW  MaxW   ReadBack
+           ----------- ---- ----- ----- ---- ------ ------ ---- ------ ----- ----- ---------
+           lfuse          0     0     0    0 no          1    0      0  4500  4500 0x00 0x00
+                                  Block Poll               Page                       Polled
+           Memory Type Mode Delay Size  Indx Paged  Size   Size #Pages MinW  MaxW   ReadBack
+           ----------- ---- ----- ----- ---- ------ ------ ---- ------ ----- ----- ---------
+           hfuse          0     0     0    0 no          1    0      0  4500  4500 0x00 0x00
+                                  Block Poll               Page                       Polled
+           Memory Type Mode Delay Size  Indx Paged  Size   Size #Pages MinW  MaxW   ReadBack
+           ----------- ---- ----- ----- ---- ------ ------ ---- ------ ----- ----- ---------
+           efuse          0     0     0    0 no          1    0      0  4500  4500 0x00 0x00
+                                  Block Poll               Page                       Polled
+           Memory Type Mode Delay Size  Indx Paged  Size   Size #Pages MinW  MaxW   ReadBack
+           ----------- ---- ----- ----- ---- ------ ------ ---- ------ ----- ----- ---------
+           lock           0     0     0    0 no          1    0      0  4500  4500 0x00 0x00
+                                  Block Poll               Page                       Polled
+           Memory Type Mode Delay Size  Indx Paged  Size   Size #Pages MinW  MaxW   ReadBack
+           ----------- ---- ----- ----- ---- ------ ------ ---- ------ ----- ----- ---------
+           calibration    0     0     0    0 no          1    0      0     0     0 0x00 0x00
+                                  Block Poll               Page                       Polled
+           Memory Type Mode Delay Size  Indx Paged  Size   Size #Pages MinW  MaxW   ReadBack
+           ----------- ---- ----- ----- ---- ------ ------ ---- ------ ----- ----- ---------
+           signature      0     0     0    0 no          3    0      0     0     0 0x00 0x00
+
+         Programmer Type : Arduino
+         Description     : Arduino
+avrdude: Send: A [41] . [80]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [03] 
+avrdude: Recv: . [10] 
+avrdude: Send: A [41] . [81]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [04] 
+avrdude: Recv: . [10] 
+avrdude: Send: A [41] . [82]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [04] 
+avrdude: Recv: . [10] 
+avrdude: Send: A [41] . [98]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [03] 
+avrdude: Recv: . [10] 
+         Hardware Version: 3
+         Firmware Version: 4.4
+avrdude: Send: A [41] . [84]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [03] 
+avrdude: Recv: . [10] 
+avrdude: Send: A [41] . [85]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [03] 
+avrdude: Recv: . [10] 
+avrdude: Send: A [41] . [86]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [03] 
+avrdude: Recv: . [10] 
+avrdude: Send: A [41] . [87]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [03] 
+avrdude: Recv: . [10] 
+avrdude: Send: A [41] . [89]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [03] 
+avrdude: Recv: . [10] 
+         Vtarget         : 0.3 V
+         Varef           : 0.3 V
+         Oscillator      : 28.800 kHz
+         SCK period      : 3.3 us
+
+avrdude: Send: A [41] . [81]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [04] 
+avrdude: Recv: . [10] 
+avrdude: Send: A [41] . [82]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [04] 
+avrdude: Recv: . [10] 
+avrdude: Send: B [42] . [86] . [00] . [00] . [01] . [01] . [01] . [01] . [03] . [ff] . [ff] . [ff] . [ff] . [00] . [80] . [04] . [00] . [00] . [00] . [80] . [00]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [10] 
+avrdude: Send: E [45] . [05] . [04] . [d7] . [c2] . [00]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [10] 
+avrdude: Send: P [50]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [10] 
+avrdude: AVR device initialized and ready to accept instructions
+
+Reading | avrdude: Send: u [75]   [20] 
+avrdude: Recv: . [14] . [1e] . [95] . [0f] . [10] 
+################################################## | 100% 0.01s
+
+avrdude: Device signature = 0x1e950f
+avrdude: Send: V [56] . [a0] . [03] . [fc] . [00]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [00] 
+avrdude: Recv: . [10] 
+avrdude: Send: V [56] . [a0] . [03] . [fd] . [00]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [00] 
+avrdude: Recv: . [10] 
+avrdude: Send: V [56] . [a0] . [03] . [fe] . [00]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [00] 
+avrdude: Recv: . [10] 
+avrdude: Send: V [56] . [a0] . [03] . [ff] . [00]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [00] 
+avrdude: Recv: . [10] 
+avrdude: reading input file "C:\Users\Inshal\AppData\Local\Temp\build8644528932518151390.tmp\sketch_jan11a.cpp.hex"
+avrdude: writing flash (472 bytes):
+
+Writing | avrdude: Send: U [55] . [00] . [00]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [10] 
+avrdude: Send: d [64] . [00] . [80] F [46] . [0c] . [94] 4 [34] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] g [67] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [11] $ [24] . [1f] . [be] . [cf] . [ef] . [d8] . [e0] . [de] . [bf] . [cd] . [bf] . [11] . [e0] . [a0] . [e0] . [b1] . [e0] . [e8] . [ed] . [f1] . [e0] . [02] . [c0]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [10] 
+#############avrdude: Send: U [55] @ [40] . [00]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [10] 
+avrdude: Send: d [64] . [00] . [80] F [46] . [05] . [90] . [0d] . [92] . [a0] 0 [30] . [b1] . [07] . [d9] . [f7] . [11] . [e0] . [a0] . [e0] . [b1] . [e0] . [01] . [c0] . [1d] . [92] . [a9] 0 [30] . [b1] . [07] . [e1] . [f7] . [0e] . [94] V [56] . [00] . [0c] . [94] . [ea] . [00] . [0c] . [94] . [00] . [00] . [08] . [95] . [08] . [95] . [08] . [95] . [cf] . [93] . [df] . [93] . [0e] . [94] . [af] . [00] . [0e] . [94] U [55] . [00] . [0e] . [94] S [53] . [00] . [c0] . [e0] . [d0] . [e0] . [0e] . [94] T [54] . [00]   [20] . [97] . [e1] . [f3] . [0e] . [94] . [00] . [00] . [f9] . [cf] . [1f] . [92] . [0f] . [92] . [0f] . [b6] . [0f] . [92] . [11] $ [24] / [2f] . [93] ? [3f] . [93] . [8f] . [93] . [9f] . [93] . [af] . [93] . [bf] . [93] . [80] . [91] . [04] . [01] . [90] . [91] . [05] . [01] . [a0] . [91] . [06] . [01] . [b0] . [91] . [07] . [01] 0 [30] . [91] . [08] . [01] . [01] . [96] . [a1] . [1d] . [b1] . [1d] # [23] / [2f]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [10] 
+##############avrdude: Send: U [55] . [80] . [00]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [10] 
+avrdude: Send: d [64] . [00] . [80] F [46] - [2d] _ [5f] - [2d] 7 [37]   [20] . [f0] - [2d] W [57] . [01] . [96] . [a1] . [1d] . [b1] . [1d]   [20] . [93] . [08] . [01] . [80] . [93] . [04] . [01] . [90] . [93] . [05] . [01] . [a0] . [93] . [06] . [01] . [b0] . [93] . [07] . [01] . [80] . [91] . [00] . [01] . [90] . [91] . [01] . [01] . [a0] . [91] . [02] . [01] . [b0] . [91] . [03] . [01] . [01] . [96] . [a1] . [1d] . [b1] . [1d] . [80] . [93] . [00] . [01] . [90] . [93] . [01] . [01] . [a0] . [93] . [02] . [01] . [b0] . [93] . [03] . [01] . [bf] . [91] . [af] . [91] . [9f] . [91] . [8f] . [91] ? [3f] . [91] / [2f] . [91] . [0f] . [90] . [0f] . [be] . [0f] . [90] . [1f] . [90] . [18] . [95] x [78] . [94] . [84] . [b5] . [82] ` [60] . [84] . [bd] . [84] . [b5] . [81] ` [60] . [84] . [bd] . [85] . [b5] . [82] ` [60] . [85] . [bd] . [85] . [b5] . [81] ` [60] . [85] . [bd] . [ee] . [e6] . [f0] . [e0] . [80] . [81] . [81] ` [60]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [10] 
+#############avrdude: Send: U [55] . [c0] . [00]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [10] 
+avrdude: Send: d [64] . [00] X [58] F [46] . [80] . [83] . [e1] . [e8] . [f0] . [e0] . [10] . [82] . [80] . [81] . [82] ` [60] . [80] . [83] . [80] . [81] . [81] ` [60] . [80] . [83] . [e0] . [e8] . [f0] . [e0] . [80] . [81] . [81] ` [60] . [80] . [83] . [e1] . [eb] . [f0] . [e0] . [80] . [81] . [84] ` [60] . [80] . [83] . [e0] . [eb] . [f0] . [e0] . [80] . [81] . [81] ` [60] . [80] . [83] . [ea] . [e7] . [f0] . [e0] . [80] . [81] . [84] ` [60] . [80] . [83] . [80] . [81] . [82] ` [60] . [80] . [83] . [80] . [81] . [81] ` [60] . [80] . [83] . [80] . [81] . [80] h [68] . [80] . [83] . [10] . [92] . [c1] . [00] . [08] . [95] . [f8] . [94] . [ff] . [cf]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [10] 
+########## | 100% 0.11s
+
+avrdude: 472 bytes of flash written
+avrdude: verifying flash memory against C:\Users\Inshal\AppData\Local\Temp\build8644528932518151390.tmp\sketch_jan11a.cpp.hex:
+avrdude: load data flash data from input file C:\Users\Inshal\AppData\Local\Temp\build8644528932518151390.tmp\sketch_jan11a.cpp.hex:
+avrdude: input file C:\Users\Inshal\AppData\Local\Temp\build8644528932518151390.tmp\sketch_jan11a.cpp.hex contains 472 bytes
+avrdude: reading on-chip flash data:
+
+Reading | avrdude: Send: U [55] . [00] . [00]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [10] 
+avrdude: Send: t [74] . [00] . [80] F [46]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [0c] . [94] 4 [34] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] g [67] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [0c] . [94] Q [51] . [00] . [11] $ [24] . [1f] . [be] . [cf] . [ef] . [d8] . [e0] . [de] . [bf] . [cd] . [bf] . [11] . [e0] . [a0] . [e0] . [b1] . [e0] . [e8] . [ed] . [f1] . [e0] . [02] . [c0] 
+avrdude: Recv: . [10] 
+#############avrdude: Send: U [55] @ [40] . [00]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [10] 
+avrdude: Send: t [74] . [00] . [80] F [46]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [05] . [90] . [0d] . [92] . [a0] 0 [30] . [b1] . [07] . [d9] . [f7] . [11] . [e0] . [a0] . [e0] . [b1] . [e0] . [01] . [c0] . [1d] . [92] . [a9] 0 [30] . [b1] . [07] . [e1] . [f7] . [0e] . [94] V [56] . [00] . [0c] . [94] . [ea] . [00] . [0c] . [94] . [00] . [00] . [08] . [95] . [08] . [95] . [08] . [95] . [cf] . [93] . [df] . [93] . [0e] . [94] . [af] . [00] . [0e] . [94] U [55] . [00] . [0e] . [94] S [53] . [00] . [c0] . [e0] . [d0] . [e0] . [0e] . [94] T [54] . [00]   [20] . [97] . [e1] . [f3] . [0e] . [94] . [00] . [00] . [f9] . [cf] . [1f] . [92] . [0f] . [92] . [0f] . [b6] . [0f] . [92] . [11] $ [24] / [2f] . [93] ? [3f] . [93] . [8f] . [93] . [9f] . [93] . [af] . [93] . [bf] . [93] . [80] . [91] . [04] . [01] . [90] . [91] . [05] . [01] . [a0] . [91] . [06] . [01] . [b0] . [91] . [07] . [01] 0 [30] . [91] . [08] . [01] . [01] . [96] . [a1] . [1d] . [b1] . [1d] # [23] / [2f] 
+avrdude: Recv: . [10] 
+##############avrdude: Send: U [55] . [80] . [00]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [10] 
+avrdude: Send: t [74] . [00] . [80] F [46]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: - [2d] _ [5f] - [2d] 7 [37]   [20] . [f0] - [2d] W [57] . [01] . [96] . [a1] . [1d] . [b1] . [1d]   [20] . [93] . [08] . [01] . [80] . [93] . [04] . [01] . [90] . [93] . [05] . [01] . [a0] . [93] . [06] . [01] . [b0] . [93] . [07] . [01] . [80] . [91] . [00] . [01] . [90] . [91] . [01] . [01] . [a0] . [91] . [02] . [01] . [b0] . [91] . [03] . [01] . [01] . [96] . [a1] . [1d] . [b1] . [1d] . [80] . [93] . [00] . [01] . [90] . [93] . [01] . [01] . [a0] . [93] . [02] . [01] . [b0] . [93] . [03] . [01] . [bf] . [91] . [af] . [91] . [9f] . [91] . [8f] . [91] ? [3f] . [91] / [2f] . [91] . [0f] . [90] . [0f] . [be] . [0f] . [90] . [1f] . [90] . [18] . [95] x [78] . [94] . [84] . [b5] . [82] ` [60] . [84] . [bd] . [84] . [b5] . [81] ` [60] . [84] . [bd] . [85] . [b5] . [82] ` [60] . [85] . [bd] . [85] . [b5] . [81] ` [60] . [85] . [bd] . [ee] . [e6] . [f0] . [e0] . [80] . [81] . [81] ` [60] 
+avrdude: Recv: . [10] 
+#############avrdude: Send: U [55] . [c0] . [00]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [10] 
+avrdude: Send: t [74] . [00] X [58] F [46]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [80] . [83] . [e1] . [e8] . [f0] . [e0] . [10] . [82] . [80] . [81] . [82] ` [60] . [80] . [83] . [80] . [81] . [81] ` [60] . [80] . [83] . [e0] . [e8] . [f0] . [e0] . [80] . [81] . [81] ` [60] . [80] . [83] . [e1] . [eb] . [f0] . [e0] . [80] . [81] . [84] ` [60] . [80] . [83] . [e0] . [eb] . [f0] . [e0] . [80] . [81] . [81] ` [60] . [80] . [83] . [ea] . [e7] . [f0] . [e0] . [80] . [81] . [84] ` [60] . [80] . [83] . [80] . [81] . [82] ` [60] . [80] . [83] . [80] . [81] . [81] ` [60] . [80] . [83] . [80] . [81] . [80] h [68] . [80] . [83] . [10] . [92] . [c1] . [00] . [08] . [95] . [f8] . [94] . [ff] . [cf] 
+avrdude: Recv: . [10] 
+########## | 100% 0.07s
+
+avrdude: verifying ...
+avrdude: 472 bytes of flash verified
+avrdude: Send: Q [51]   [20] 
+avrdude: Recv: . [14] 
+avrdude: Recv: . [10] 
+
+avrdude done.  Thank you.
