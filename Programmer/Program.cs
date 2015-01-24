@@ -1,11 +1,14 @@
-﻿#define BLANK_PROGRAM // Current values are: BLINK_PROGRAM, BLANK_PROGRAM
+﻿//#define BOARD         // Use to enable or disable board related code
+//#define BLANK_PROGRAM // Current values are: BLINK_PROGRAM, BLANK_PROGRAM
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.IO.Ports;
+using System.IO.Ports;          // For accessing the COM ports of the computer
+using System.IO;                // For File I/O
 using System.Text;
-using System.Threading;
+using System.Threading;         // For the Thread.Sleep function
+using System.Globalization;     // For NumberStyles
 
 namespace TestProgrammer
 {
@@ -58,6 +61,39 @@ namespace TestProgrammer
         
         static void Main(string[] args)
         {
+            // The following list will contain the hex file in array
+            // It will follow the same standard as that of the hex file CCAAAAXX...XX
+            // As you can see above, it will not include the checksum or file type
+            List<byte[]> prog = new List<byte[]>();
+
+            string path = @"H:\optiboot-v5.0a\BlankProgram.hex";
+            StreamReader reader = new StreamReader(path);
+
+            // Line read from the hex file
+            string line = reader.ReadLine();
+
+            while (line != null)
+            {
+                line = line.TrimStart(':');
+                Console.WriteLine(line);
+
+                // Read CC field from the line
+                int dataLength = int.Parse(line.Substring(0, 2), NumberStyles.HexNumber);
+
+                // TODO: Read AAAA
+
+                // TODO: Read TT
+
+                // TODO: Read XX...XX
+
+                // TODO: Skip SS
+
+                // Read line at the end of the loop to avoid null reference exceptions
+                line = reader.ReadLine();
+            }
+
+#if BOARD
+
             byte[] buff;    // Holds data to be transferred
             
             // Initialize serial port on which the Arduino is
@@ -70,7 +106,6 @@ namespace TestProgrammer
             Console.WriteLine("Resetting the board...\n");
             ser.DtrEnable = !ser.DtrEnable;     // Toggle DTR
             ser.DtrEnable = !ser.DtrEnable;     // Toggle DTR
-            //Thread.Sleep(10);                   // Adds a delay
 
             // Code segment for GETSYNC
             buff = new byte[2] { STK_GET_SYNC, CRC_EOP };
@@ -216,7 +251,7 @@ namespace TestProgrammer
             getResponse(ser);
             
             #region Blank Program Upload
-            #if BLANK_PROGRAM
+#if BLANK_PROGRAM
             //==== Blank Program for testing basic communications ==== //
 
             // TODO: Determine purpose of code Segment
@@ -307,7 +342,7 @@ namespace TestProgrammer
             Console.WriteLine();
             getResponse(ser);
 
-            #endif
+#endif
             #endregion
 
             #region Blink Program Upload
@@ -529,6 +564,9 @@ namespace TestProgrammer
 
             // End communication
             ser.Close();
+            
+#endif
+
             Console.WriteLine("Done.");
             Console.ReadKey();
         }
