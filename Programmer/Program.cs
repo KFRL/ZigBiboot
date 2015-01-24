@@ -1,6 +1,6 @@
-﻿//#define BOARD         // Use to enable or disable board related code
-#define HEXFILE         // Use to enable or disable hex file reading portion
-//#define BLANK_PROGRAM // Current values are: BLINK_PROGRAM, BLANK_PROGRAM
+﻿#define BOARD             // Use to enable or disable board related code
+//#define HEXFILE         // Use to enable or disable hex file reading portion
+#define BLINK_PROGRAM     // Current values are: BLINK_PROGRAM, BLANK_PROGRAM
 
 using System;
 using System.Collections.Generic;
