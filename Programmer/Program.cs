@@ -1,8 +1,4 @@
-﻿#define BOARD             // Use to enable or disable board related code
-//#define HEXFILE         // Use to enable or disable hex file reading portion
-#define BLINK_PROGRAM     // Current values are: BLINK_PROGRAM, BLANK_PROGRAM
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO.Ports;          // For accessing the COM ports of the computer
@@ -15,7 +11,7 @@ namespace TestProgrammer
 {
     class Program
     {
-        // Declaration of constants
+        // Declaration STK of constants
         #region stk500
 
         /* STK500 constants list, from AVRDUDE */
@@ -62,446 +58,25 @@ namespace TestProgrammer
         
         static void Main(string[] args)
         {
-#if HEXFILE
-            #region Hex File Decoding
-            // The following list will contain the hex file in array
-            // It will follow the same standard as that of the hex file CCAAAAXX...XX
-            // As you can see above, it will not include the checksum or file type
-            List<byte[]> prog = new List<byte[]>();
+            List<byte[]> programData = new List<byte[]>();
+            List<byte[]> programAddresses = new List<byte[]>();
 
-            string path = @"H:\optiboot-v5.0a\BlankProgram.hex";
-            StreamReader reader = new StreamReader(path);
-
-            // Line read from the hex file
-            string line = reader.ReadLine();
-
-            while (line != null)
-            {
-                line = line.TrimStart(':');
-                Console.WriteLine(line);
-
-                // Read CC field from the line
-                int dataLength = int.Parse(line.Substring(0, 2), NumberStyles.HexNumber);
-
-                // TODO: Read AAAA
-
-                // TODO: Read TT
-
-                // TODO: Read XX...XX
-
-                // TODO: Skip SS
-
-                // Read line at the end of the loop to avoid null reference exceptions
-                line = reader.ReadLine();
-            }
-            #endregion
-#endif
-
-#if BOARD
-
-            byte[] buff;    // Holds data to be transferred
-            
-            // Initialize serial port on which the Arduino is
-            SerialPort ser = new SerialPort("COM13", 115200, Parity.None, 8, StopBits.One);
-
-            // Open the port for transmission
-            ser.Open();
-
-            // Reset the board
-            Console.WriteLine("Resetting the board...\n");
-            ser.DtrEnable = !ser.DtrEnable;     // Toggle DTR
-            ser.DtrEnable = !ser.DtrEnable;     // Toggle DTR
-
-            // Code segment for GETSYNC
-            buff = new byte[2] { STK_GET_SYNC, CRC_EOP };
-
-            for (int i = 0; i < 3; i++)
-            {
-                Console.WriteLine("Send: [{0:X2}] [{1:X2}]", buff[0], buff[1]);
-                ser.Write(buff, 0, 2);
-                Thread.Sleep(35);                  // Adds a delay
-            }
-
-            getResponse(ser);
-
-            // Code segment for GET_PARAM 0x80
-            buff = new byte[3] { STK_GET_PARAMETER, 0x80, CRC_EOP };
-            
-            ser.Write(buff, 0, 3);
-            Console.WriteLine("Send: [{0:X2}] [{1:X2}] [{2:X2}]", buff[0], buff[1], buff[2]);
-
-            getResponse(ser);
-
-            // Code segment for GET_PARAM 0x81
-            buff = new byte[3] { STK_GET_PARAMETER, 0x81, CRC_EOP };
-
-            ser.Write(buff, 0, 3);
-            Console.WriteLine("Send: [{0:X2}] [{1:X2}] [{2:X2}]", buff[0], buff[1], buff[2]);
-
-            getResponse(ser);
-
-            // Code segment for GET_PARAM 0x82
-            buff = new byte[3] { STK_GET_PARAMETER, 0x82, CRC_EOP };
-
-            ser.Write(buff, 0, 3);
-            Console.WriteLine("Send: [{0:X2}] [{1:X2}] [{2:X2}]", buff[0], buff[1], buff[2]);
-
-            getResponse(ser);
-
-            // Code segment for GET_PARAM 0x98
-            buff = new byte[3] { STK_GET_PARAMETER, 0x98, CRC_EOP };
-
-            ser.Write(buff, 0, 3);
-            Console.WriteLine("Send: [{0:X2}] [{1:X2}] [{2:X2}]", buff[0], buff[1], buff[2]);
-
-            getResponse(ser);
-
-            // Read signature of the device
-            buff = new byte[] { STK_READ_SIGN, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-            
-            // The following format for changing the current address is used
-            // Format: Command, Word Address Low, Word Address High, CRC_EOP
-            //
-            // Note that the WORD address is sent. The bootloader doubles it
-            // to get the byte address itself. Makes sure that this value is
-            // not confused with the byte address in the hex file and that
-            // the address received from there is halved when sent.
-            //
-            // The following format for the page writes is used
-            // Format: Command, Ignored Byte, Length of Data/Page, Ignored Byte, Data, CRC_EOP
-
-            #region Blank Program Upload
-#if BLANK_PROGRAM
-            //==== Blank Program for testing basic communications ==== //
-
-            // Change the current address to write data to
-            buff = new byte[] { STK_LOAD_ADDRESS, 0x00, 0x00, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // Write the data to the flash memory
-            buff = new byte[] { STK_PROG_PAGE, 0x00, 0x80, 0x46, 0x0c, 0x94, 0x34, 0x00, 0x0c, 0x94, 0x51, 0x00, 0x0c, 0x94, 0x51, 0x00, 0x0c, 0x94,  0x51,  0x00,  0x0c, 0x94, 0x51, 0x00, 0x0c, 0x94, 0x51, 0x00, 0x0c, 0x94, 0x51, 0x00, 0x0c, 0x94, 0x51, 0x00, 0x0c, 0x94, 0x51, 0x00, 0x0c, 0x94, 0x51, 0x00, 0x0c, 0x94, 0x51, 0x00, 0x0c, 0x94, 0x51, 0x00, 0x0c, 0x94, 0x51, 0x00, 0x0c, 0x94, 0x51, 0x00, 0x0c, 0x94, 0x51, 0x00, 0x0c, 0x94, 0x51, 0x00, 0x0c, 0x94, 0x67, 0x00, 0x0c, 0x94, 0x51, 0x00,0x0c,0x94,0x51,0x00,0x0c,0x94,0x51,0x00,0x0c,0x94,0x51,0x00,0x0c,0x94,0x51,0x00,0x0c,0x94,0x51,0x00,0x0c,0x94,0x51,0x00,0x0c,0x94,0x51,0x00,0x0c,0x94,0x51,0x00,0x11,0x24,0x1f,0xbe,0xcf,0xef,0xd8,0xe0,0xde,0xbf,0xcd,0xbf,0x11,0xe0,0xa0,0xe0,0xb1,0xe0,0xe8,0xed,0xf1, 0xe0, 0x02, 0xc0, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // Change the current address to write data to
-            buff = new byte[] { STK_LOAD_ADDRESS, 0x40, 0x00, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // Write the data to the flash memory
-            buff = new byte[] { STK_PROG_PAGE, 0x00, 0x80, 0x46, 0x05, 0x90, 0x0d, 0x92, 0xa0, 0x30, 0xb1, 0x07, 0xd9, 0xf7, 0x11, 0xe0, 0xa0, 0xe0, 0xb1, 0xe0, 0x01, 0xc0, 0x1d, 0x92, 0xa9, 0x30, 0xb1, 0x07, 0xe1, 0xf7, 0x0e, 0x94, 0x56, 0x00, 0x0c, 0x94, 0xea, 0x00, 0x0c, 0x94, 0x00, 0x00, 0x08, 0x95, 0x08, 0x95, 0x08, 0x95, 0xcf, 0x93, 0xdf, 0x93, 0x0e, 0x94, 0xaf, 0x00, 0x0e, 0x94, 0x55, 0x00, 0x0e, 0x94, 0x53, 0x00, 0xc0, 0xe0, 0xd0, 0xe0, 0x0e, 0x94, 0x54, 0x00, 0x20, 0x97, 0xe1, 0xf3, 0x0e, 0x94, 0x00, 0x00, 0xf9, 0xcf, 0x1f, 0x92, 0x0f, 0x92, 0x0f, 0xb6, 0x0f, 0x92, 0x11, 0x24, 0x2f, 0x93, 0x3f, 0x93, 0x8f, 0x93, 0x9f, 0x93, 0xaf, 0x93, 0xbf, 0x93, 0x80, 0x91, 0x04, 0x01, 0x90, 0x91, 0x05, 0x01, 0xa0, 0x91, 0x06, 0x01, 0xb0, 0x91, 0x07, 0x01, 0x30, 0x91, 0x08, 0x01, 0x01, 0x96, 0xa1, 0x1d, 0xb1, 0x1d, 0x23, 0x2f, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // Change the current address to write data to
-            buff = new byte[] { STK_LOAD_ADDRESS, 0x80, 0x00, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // Write the data to the flash memory
-            buff = new byte[] { STK_PROG_PAGE, 0x00, 0x80, 0x46, 0x2d, 0x5f, 0x2d, 0x37, 0x20, 0xf0, 0x2d, 0x57, 0x01, 0x96, 0xa1, 0x1d, 0xb1, 0x1d, 0x20, 0x93, 0x08, 0x01, 0x80, 0x93, 0x04, 0x01, 0x90, 0x93, 0x05, 0x01, 0xa0, 0x93, 0x06, 0x01, 0xb0, 0x93, 0x07, 0x01, 0x80, 0x91, 0x00, 0x01, 0x90, 0x91, 0x01, 0x01, 0xa0, 0x91, 0x02, 0x01, 0xb0, 0x91, 0x03, 0x01, 0x01, 0x96, 0xa1, 0x1d, 0xb1, 0x1d, 0x80, 0x93, 0x00, 0x01, 0x90, 0x93, 0x01, 0x01, 0xa0, 0x93, 0x02, 0x01, 0xb0, 0x93, 0x03, 0x01, 0xbf, 0x91, 0xaf, 0x91, 0x9f, 0x91, 0x8f, 0x91, 0x3f, 0x91, 0x2f, 0x91, 0x0f, 0x90, 0x0f, 0xbe, 0x0f, 0x90, 0x1f, 0x90, 0x18, 0x95, 0x78, 0x94, 0x84, 0xb5, 0x82, 0x60, 0x84, 0xbd, 0x84, 0xb5, 0x81, 0x60, 0x84, 0xbd, 0x85, 0xb5, 0x82, 0x60, 0x85, 0xbd, 0x85, 0xb5, 0x81, 0x60, 0x85, 0xbd, 0xee, 0xe6, 0xf0, 0xe0, 0x80, 0x81, 0x81, 0x60, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // Change the current address to write data to
-            buff = new byte[] { STK_LOAD_ADDRESS, 0xc0, 0x00, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // Write the data to the flash memory
-            buff = new byte[] { STK_PROG_PAGE, 0x00, 0x58, 0x46, 0x80, 0x83, 0xe1, 0xe8, 0xf0, 0xe0, 0x10, 0x82, 0x80, 0x81, 0x82, 0x60, 0x80, 0x83, 0x80, 0x81, 0x81, 0x60, 0x80, 0x83, 0xe0, 0xe8, 0xf0, 0xe0, 0x80, 0x81, 0x81, 0x60, 0x80, 0x83, 0xe1, 0xeb, 0xf0, 0xe0, 0x80, 0x81, 0x84, 0x60, 0x80, 0x83, 0xe0, 0xeb, 0xf0, 0xe0, 0x80, 0x81, 0x81, 0x60, 0x80, 0x83, 0xea, 0xe7, 0xf0, 0xe0, 0x80, 0x81, 0x84, 0x60, 0x80, 0x83, 0x80, 0x81, 0x82, 0x60, 0x80, 0x83, 0x80, 0x81, 0x81, 0x60, 0x80, 0x83, 0x80, 0x81, 0x80, 0x68, 0x80, 0x83, 0x10, 0x92, 0xc1, 0x00, 0x08, 0x95, 0xf8, 0x94, 0xff, 0xcf, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-#endif
-            #endregion
-
-            #region Blink Program Upload
-#if BLINK_PROGRAM
-            // ==== Blink program for testing the uploading ==== //
-            
-            // Change the current address to write data to
-            buff = new byte[] { STK_LOAD_ADDRESS, 0x00, 0x00, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // Write the data to the flash memory
-            buff = new byte[] { STK_PROG_PAGE, 0x00, 0x80, 0x46, 0x0c, 0x94, 0x61, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x0c, 0x94, 0x9a, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x0c, 0x94, 0x7e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x00, 0x27, 0x00, 0x2a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x25, 0x00, 0x28, 0x00, 0x2b, 0x00, 0x00, 0x00, 0x00, 0x00, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // Change the current address to write data to
-            buff = new byte[] { STK_LOAD_ADDRESS, 0x40, 0x00, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // Write the data to the flash memory
-            buff = new byte[] { STK_PROG_PAGE, 0x00, 0x80, 0x46, 0x23, 0x00, 0x26, 0x00, 0x29, 0x00, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x00, 0x00, 0x00, 0x07, 0x00, 0x02, 0x01, 0x00, 0x00, 0x03, 0x04, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x11, 0x24, 0x1f, 0xbe, 0xcf, 0xef, 0xd8, 0xe0, 0xde, 0xbf, 0xcd, 0xbf, 0x11, 0xe0, 0xa0, 0xe0, 0xb1, 0xe0, 0xea, 0xe3, 0xf4, 0xe0, 0x02, 0xc0, 0x05, 0x90, 0x0d, 0x92, 0xa0, 0x30, 0xb1, 0x07, 0xd9, 0xf7, 0x11, 0xe0, 0xa0, 0xe0, 0xb1, 0xe0, 0x01, 0xc0, 0x1d, 0x92, 0xa9, 0x30, 0xb1, 0x07, 0xe1, 0xf7, 0x0e, 0x94, 0x0a, 0x02, 0x0c, 0x94, 0x1b, 0x02, 0x0c, 0x94, 0x00, 0x00, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // Change the current address to write data to
-            buff = new byte[] { STK_LOAD_ADDRESS, 0x80, 0x00, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // Write the data to the flash memory
-            buff = new byte[] { STK_PROG_PAGE, 0x00, 0x80, 0x46, 0x8d, 0xe0, 0x61, 0xe0, 0x0e, 0x94, 0xb5, 0x01, 0x68, 0xee, 0x73, 0xe0, 0x80, 0xe0, 0x90, 0xe0, 0x0e, 0x94, 0xe2, 0x00, 0x8d, 0xe0, 0x60, 0xe0, 0x0e, 0x94, 0xb5, 0x01, 0x68, 0xee, 0x73, 0xe0, 0x80, 0xe0, 0x90, 0xe0, 0x0e, 0x94, 0xe2, 0x00, 0x08, 0x95, 0x8d, 0xe0, 0x61, 0xe0, 0x0e, 0x94, 0x76, 0x01, 0x08, 0x95, 0x1f, 0x92, 0x0f, 0x92, 0x0f, 0xb6, 0x0f, 0x92, 0x11, 0x24, 0x2f, 0x93, 0x3f, 0x93, 0x8f, 0x93, 0x9f, 0x93, 0xaf, 0x93, 0xbf, 0x93, 0x80, 0x91, 0x04, 0x01, 0x90, 0x91, 0x05, 0x01, 0xa0, 0x91, 0x06, 0x01, 0xb0, 0x91, 0x07, 0x01, 0x30, 0x91, 0x08, 0x01, 0x01, 0x96, 0xa1, 0x1d, 0xb1, 0x1d, 0x23, 0x2f, 0x2d, 0x5f, 0x2d, 0x37, 0x20, 0xf0, 0x2d, 0x57, 0x01, 0x96, 0xa1, 0x1d, 0xb1, 0x1d, 0x20, 0x93, 0x08, 0x01, 0x80, 0x93, 0x04, 0x01, 0x90, 0x93, 0x05, 0x01, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // Change the current address to write data to
-            buff = new byte[] { STK_LOAD_ADDRESS, 0xc0, 0x00, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // Write the data to the flash memory
-            buff = new byte[] { STK_PROG_PAGE, 0x00, 0x80, 0x46, 0xa0, 0x93, 0x06, 0x01, 0xb0, 0x93, 0x07, 0x01, 0x80, 0x91, 0x00, 0x01, 0x90, 0x91, 0x01, 0x01, 0xa0, 0x91, 0x02, 0x01, 0xb0, 0x91, 0x03, 0x01, 0x01, 0x96, 0xa1, 0x1d, 0xb1, 0x1d, 0x80, 0x93, 0x00, 0x01, 0x90, 0x93, 0x01, 0x01, 0xa0, 0x93, 0x02, 0x01, 0xb0, 0x93, 0x03, 0x01, 0xbf, 0x91, 0xaf, 0x91, 0x9f, 0x91, 0x8f, 0x91, 0x3f, 0x91, 0x2f, 0x91, 0x0f, 0x90, 0x0f, 0xbe, 0x0f, 0x90, 0x1f, 0x90, 0x18, 0x95, 0x9b, 0x01, 0xac, 0x01, 0x7f, 0xb7, 0xf8, 0x94, 0x80, 0x91, 0x00, 0x01, 0x90, 0x91, 0x01, 0x01, 0xa0, 0x91, 0x02, 0x01, 0xb0, 0x91, 0x03, 0x01, 0x66, 0xb5, 0xa8, 0x9b, 0x05, 0xc0, 0x6f, 0x3f, 0x19, 0xf0, 0x01, 0x96, 0xa1, 0x1d, 0xb1, 0x1d, 0x7f, 0xbf, 0xba, 0x2f, 0xa9, 0x2f, 0x98, 0x2f, 0x88, 0x27, 0x86, 0x0f, 0x91, 0x1d, 0xa1, 0x1d, 0xb1, 0x1d, 0x62, 0xe0, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // Change the current address to write data to
-            buff = new byte[] { STK_LOAD_ADDRESS, 0x00, 0x01, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // Write the data to the flash memory
-            buff = new byte[] { STK_PROG_PAGE, 0x00, 0x80, 0x46, 0x88, 0x0f, 0x99, 0x1f, 0xaa, 0x1f, 0xbb, 0x1f, 0x6a, 0x95, 0xd1, 0xf7, 0xbc, 0x01, 0x2d, 0xc0, 0xff, 0xb7, 0xf8, 0x94, 0x80, 0x91, 0x00, 0x01, 0x90, 0x91, 0x01, 0x01, 0xa0, 0x91, 0x02, 0x01, 0xb0, 0x91, 0x03, 0x01, 0xe6, 0xb5, 0xa8, 0x9b, 0x05, 0xc0, 0xef, 0x3f, 0x19, 0xf0, 0x01, 0x96, 0xa1, 0x1d, 0xb1, 0x1d, 0xff, 0xbf, 0xba, 0x2f, 0xa9, 0x2f, 0x98, 0x2f, 0x88, 0x27, 0x8e, 0x0f, 0x91, 0x1d, 0xa1, 0x1d, 0xb1, 0x1d, 0xe2, 0xe0, 0x88, 0x0f, 0x99, 0x1f, 0xaa, 0x1f, 0xbb, 0x1f, 0xea, 0x95, 0xd1, 0xf7, 0x86, 0x1b, 0x97, 0x0b, 0x88, 0x5e, 0x93, 0x40, 0xc8, 0xf2, 0x21, 0x50, 0x30, 0x40, 0x40, 0x40, 0x50, 0x40, 0x68, 0x51, 0x7c, 0x4f, 0x21, 0x15, 0x31, 0x05, 0x41, 0x05, 0x51, 0x05, 0x71, 0xf6, 0x08, 0x95, 0x78, 0x94, 0x84, 0xb5, 0x82, 0x60, 0x84, 0xbd, 0x84, 0xb5, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // Change the current address to write data to
-            buff = new byte[] { STK_LOAD_ADDRESS, 0x40, 0x01, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // Write the data to the flash memory
-            buff = new byte[] { STK_PROG_PAGE, 0x00, 0x80, 0x46, 0x81, 0x60, 0x84, 0xbd, 0x85, 0xb5, 0x82, 0x60, 0x85, 0xbd, 0x85, 0xb5, 0x81, 0x60, 0x85, 0xbd, 0xee, 0xe6, 0xf0, 0xe0, 0x80, 0x81, 0x81, 0x60, 0x80, 0x83, 0xe1, 0xe8, 0xf0, 0xe0, 0x10, 0x82, 0x80, 0x81, 0x82, 0x60, 0x80, 0x83, 0x80, 0x81, 0x81, 0x60, 0x80, 0x83, 0xe0, 0xe8, 0xf0, 0xe0, 0x80, 0x81, 0x81, 0x60, 0x80, 0x83, 0xe1, 0xeb, 0xf0, 0xe0, 0x80, 0x81, 0x84, 0x60, 0x80, 0x83, 0xe0, 0xeb, 0xf0, 0xe0, 0x80, 0x81, 0x81, 0x60, 0x80, 0x83, 0xea, 0xe7, 0xf0, 0xe0, 0x80, 0x81, 0x84, 0x60, 0x80, 0x83, 0x80, 0x81, 0x82, 0x60, 0x80, 0x83, 0x80, 0x81, 0x81, 0x60, 0x80, 0x83, 0x80, 0x81, 0x80, 0x68, 0x80, 0x83, 0x10, 0x92, 0xc1, 0x00, 0x08, 0x95, 0xcf, 0x93, 0xdf, 0x93, 0x48, 0x2f, 0x50, 0xe0, 0xca, 0x01, 0x86, 0x56, 0x9f, 0x4f, 0xfc, 0x01, 0x34, 0x91, 0x4a, 0x57, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // Change the current address to write data to
-            buff = new byte[] { STK_LOAD_ADDRESS, 0x80, 0x01, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // Write the data to the flash memory
-            buff = new byte[] { STK_PROG_PAGE, 0x00, 0x80, 0x46, 0x5f, 0x4f, 0xfa, 0x01, 0x84, 0x91, 0x88, 0x23, 0x69, 0xf1, 0x90, 0xe0, 0x88, 0x0f, 0x99, 0x1f, 0xfc, 0x01, 0xe8, 0x59, 0xff, 0x4f, 0xa5, 0x91, 0xb4, 0x91, 0xfc, 0x01, 0xee, 0x58, 0xff, 0x4f, 0xc5, 0x91, 0xd4, 0x91, 0x66, 0x23, 0x51, 0xf4, 0x2f, 0xb7, 0xf8, 0x94, 0x8c, 0x91, 0x93, 0x2f, 0x90, 0x95, 0x89, 0x23, 0x8c, 0x93, 0x88, 0x81, 0x89, 0x23, 0x0b, 0xc0, 0x62, 0x30, 0x61, 0xf4, 0x2f, 0xb7, 0xf8, 0x94, 0x8c, 0x91, 0x93, 0x2f, 0x90, 0x95, 0x89, 0x23, 0x8c, 0x93, 0x88, 0x81, 0x83, 0x2b, 0x88, 0x83, 0x2f, 0xbf, 0x06, 0xc0, 0x9f, 0xb7, 0xf8, 0x94, 0x8c, 0x91, 0x83, 0x2b, 0x8c, 0x93, 0x9f, 0xbf, 0xdf, 0x91, 0xcf, 0x91, 0x08, 0x95, 0x48, 0x2f, 0x50, 0xe0, 0xca, 0x01, 0x82, 0x55, 0x9f, 0x4f, 0xfc, 0x01, 0x24, 0x91, 0xca, 0x01, 0x86, 0x56, 0x9f, 0x4f, 0xfc, 0x01, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // Change the current address to write data to
-            buff = new byte[] { STK_LOAD_ADDRESS, 0xc0, 0x01, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // Write the data to the flash memory
-            buff = new byte[] { STK_PROG_PAGE, 0x00, 0x80, 0x46, 0x94, 0x91, 0x4a, 0x57, 0x5f, 0x4f, 0xfa, 0x01, 0x34, 0x91, 0x33, 0x23, 0x09, 0xf4, 0x40, 0xc0, 0x22, 0x23, 0x51, 0xf1, 0x23, 0x30, 0x71, 0xf0, 0x24, 0x30, 0x28, 0xf4, 0x21, 0x30, 0xa1, 0xf0, 0x22, 0x30, 0x11, 0xf5, 0x14, 0xc0, 0x26, 0x30, 0xb1, 0xf0, 0x27, 0x30, 0xc1, 0xf0, 0x24, 0x30, 0xd9, 0xf4, 0x04, 0xc0, 0x80, 0x91, 0x80, 0x00, 0x8f, 0x77, 0x03, 0xc0, 0x80, 0x91, 0x80, 0x00, 0x8f, 0x7d, 0x80, 0x93, 0x80, 0x00, 0x10, 0xc0, 0x84, 0xb5, 0x8f, 0x77, 0x02, 0xc0, 0x84, 0xb5, 0x8f, 0x7d, 0x84, 0xbd, 0x09, 0xc0, 0x80, 0x91, 0xb0, 0x00, 0x8f, 0x77, 0x03, 0xc0, 0x80, 0x91, 0xb0, 0x00, 0x8f, 0x7d, 0x80, 0x93, 0xb0, 0x00, 0xe3, 0x2f, 0xf0, 0xe0, 0xee, 0x0f, 0xff, 0x1f, 0xee, 0x58, 0xff, 0x4f, 0xa5, 0x91, 0xb4, 0x91, 0x2f, 0xb7, 0xf8, 0x94, 0x66, 0x23, 0x21, 0xf4, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-
-            // Change the current address to write data to
-            buff = new byte[] { STK_LOAD_ADDRESS, 0x00, 0x02, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // Write the data to the flash memory
-            buff = new byte[] { STK_PROG_PAGE, 0x00, 0x3a, 0x46, 0x8c, 0x91, 0x90, 0x95, 0x89, 0x23, 0x02, 0xc0, 0x8c, 0x91, 0x89, 0x2b, 0x8c, 0x93, 0x2f, 0xbf, 0x08, 0x95, 0x08, 0x95, 0xcf, 0x93, 0xdf, 0x93, 0x0e, 0x94, 0x3b, 0x01, 0x0e, 0x94, 0x09, 0x02, 0x0e, 0x94, 0x95, 0x00, 0xc0, 0xe0, 0xd0, 0xe0, 0x0e, 0x94, 0x80, 0x00, 0x20, 0x97, 0xe1, 0xf3, 0x0e, 0x94, 0x00, 0x00, 0xf9, 0xcf, 0xf8, 0x94, 0xff, 0xcf, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-#endif
-            #endregion
-
-            // Code Segment to leave program mode
-            buff = new byte[] { STK_LEAVE_PROGMODE, CRC_EOP };
-            ser.Write(buff, 0, buff.Length);
-            Console.Write("Send:");
-            for (int i = 0; i < buff.Length; i++)
-            {
-                Console.Write(" [{0:X2}]", buff[i]);
-            }
-            Console.WriteLine();
-            getResponse(ser);
-
-            // End communication
-            ser.Close();
-            
-#endif
+            readHexFile("Blink.hex", ref programData, ref programAddresses);
+            programBoard("COM13", programAddresses, programData);
 
             Console.WriteLine("Done.");
             Console.ReadKey();
         }
 
-        // Get response from the board and also displays it
-        static List<byte> getResponse(SerialPort ser)
+        /// <summary>
+        /// Gets response from the board and displays it
+        /// </summary>
+        /// <param name="ser">The COM port from which the data is to be received</param>
+        /// <returns>Returns a list of bytes read from the port</returns>
+        static List<byte> getResponse(SerialPort ser, bool print = true)
         {
+            // TODO: Modify function to ignore 0x10 unless it is the end of the packet
+
             List<byte> response = new List<byte>(); // A list that holds all the received data
             byte rByte = 0xFF;          // Holds a byte of data recieved from the board
             long timer = 1000000;       // Timer to stop app if nothing is received
@@ -520,10 +95,230 @@ namespace TestProgrammer
             {
                 rByte = (byte)ser.ReadByte();                // Read the incoming byte
                 response.Add(rByte);
-                Console.WriteLine("Recv: [{0:X2}]", rByte);  // Print the byte to the screen
+                if (print)
+                    Console.WriteLine("Recv: [{0:X2}]", rByte);  // Print the byte to the screen
             }
 
             return response;
+        }
+
+        /// <summary>
+        /// Programs the microcontoller
+        /// </summary>
+        /// <param name="path">The COM port at which the board is connected</param>
+        /// <param name="addresses">List of new address packets</param>
+        /// <param name="program">List of data to-be-written packets</param>
+        static void programBoard(string path, List<byte[]> addresses, List<byte[]> program, bool print = true)
+        {
+            // A buffer to hold data being sent
+            byte[] buff;
+            
+            // Initialize serial port on which the Arduino is
+            SerialPort ser = new SerialPort(path, 115200, Parity.None, 8, StopBits.One);
+
+            // Open the port for transmission
+            ser.Open();
+
+            // Reset the board
+            if (print)
+                Console.WriteLine("Resetting the board...\n");
+            ser.DtrEnable = !ser.DtrEnable;     // Toggle DTR
+            ser.DtrEnable = !ser.DtrEnable;     // Toggle DTR
+
+            // Code segment for GET_SYNC
+            buff = new byte[] { STK_GET_SYNC, CRC_EOP };
+
+            for (int i = 0; i < 3; i++)
+            {
+                if (print)
+                    Console.WriteLine("Send: [{0:X2}] [{1:X2}]", buff[0], buff[1]);
+                ser.Write(buff, 0, buff.Length);
+                Thread.Sleep(35);                  // Adds a delay
+            }
+
+            getResponse(ser);
+            
+            // Program the flash memory
+            for (int idx = 0; idx < addresses.Count; idx++)
+			{
+			    // Change the current address to write data to
+                ser.Write(addresses[idx], 0, addresses[idx].Length);
+
+                if (print)
+                {
+                    Console.Write("Send:");
+                    for (int i = 0; i < addresses[idx].Length; i++)
+                        Console.Write(" [{0:X2}]", addresses[idx][i]);
+                    Console.WriteLine();
+                }
+
+                getResponse(ser);
+
+                // Write the data to the flash memory
+                ser.Write(program[idx], 0, program[idx].Length);
+                if (print)
+                {
+                    Console.Write("Send:");
+                    for (int i = 0; i < program[idx].Length; i++)
+                        Console.Write(" [{0:X2}]", program[idx][i]);
+                    Console.WriteLine();
+                }
+                getResponse(ser);
+			}
+
+            // Read program from the flash memory 
+
+            //Console.WriteLine("\n=========Verification============\n");
+
+            //for (int idx = 0; idx < addresses.Count; idx++)
+            //{
+            //    // Change the current address to write data to
+            //    ser.Write(addresses[idx], 0, addresses[idx].Length);
+            //    Console.Write("Send:");
+            //    for (int i = 0; i < addresses[idx].Length; i++)
+            //    {
+            //        Console.Write(" [{0:X2}]", addresses[idx][i]);
+            //    }
+            //    Console.WriteLine();
+            //    getResponse(ser);
+
+            //    // Write the data to the flash memory
+            //    buff = new byte[] { STK_READ_PAGE, 0x00, 0x80, 0x46, CRC_EOP};
+            //    ser.Write(buff, 0, buff.Length);
+            //    Console.Write("Send:");
+            //    for (int i = 0; i < buff.Length; i++)
+            //    {
+            //        Console.Write(" [{0:X2}]", buff[i]);
+            //    }
+            //    Console.WriteLine();
+            //    getResponse(ser);
+            //}
+
+            // Code Segment to leave program mode
+            buff = new byte[] { STK_LEAVE_PROGMODE, CRC_EOP };
+            ser.Write(buff, 0, buff.Length);
+            if (print)
+            {
+                Console.Write("Send:");
+                for (int i = 0; i < buff.Length; i++)
+                {
+                    Console.Write(" [{0:X2}]", buff[i]);
+                }
+                Console.WriteLine();
+            }
+            getResponse(ser);
+
+            // End communication
+            ser.Close();
+        }
+
+        /// <summary>
+        /// The following functions reads the provided hex files and writes
+        /// </summary>
+        /// <param name="path">The path to the hex file as string</param>
+        /// <param name="programData">Reference to a list of byte arrays (List<byte[]>)
+        /// to store retrieved data in.</param>
+        /// <param name="programAddresses">eference to a list of byte arrays (List<byte[]>)
+        /// to store addresses in.</param>
+        /// <param name="print">Optionally prints data to console. Default is false.</param>
+        static void readHexFile(string path, ref List<byte[]> programData, ref List<byte[]> programAddresses, bool print = false)
+        {
+            // The following list will contain the hex file in array
+            // It will follow the same standard as that of the hex file CCAAAAXX...XX
+            // As you can see above, it will not include the checksum or file type
+            programData = new List<byte[]>();
+            programAddresses = new List<byte[]>();
+
+            StreamReader reader = new StreamReader(path);
+
+            // Line read from the hex file
+            string line = reader.ReadLine();
+
+            while (line != null)
+            {
+                line = line.TrimStart(':');
+
+                // Check the TT field to see if this is the last line of the file
+                if (byte.Parse(line.Substring(6, 2), NumberStyles.HexNumber) != 0x00)
+                    break;      // If it is the last line, don't read it and exit loop
+
+                // If the program gets to this part, the then the current line has valid data
+                // Declare a byte list for storing retrieved data
+                List<byte> data = new List<byte>();
+                
+                // Declare a byte list for storing the retrieved address
+                List<byte> address = new List<byte>();
+
+                // Add commands to the front of the list
+                data.Add(STK_PROG_PAGE);
+                address.Add(STK_LOAD_ADDRESS);
+
+                // Read AAAA field. We right shift it by one to get the word
+                // address. It is the same as dividing by 2.
+                int wordAddress = (int.Parse(line.Substring(2, 4), NumberStyles.HexNumber)) >> 1;
+
+                address.Add((byte)(wordAddress & 0xFF));            // Lower byte of the address
+                address.Add((byte)((wordAddress >> 8) & 0xFF));     // Upper byte of the address
+                address.Add(CRC_EOP);                               // End of packet
+
+                data.Add((byte)0x00);               // Add the second field here
+                data.Add((byte)0x00);               // Initializes length field of the data packet
+                data.Add((byte)0x46);
+
+                byte accumulator = 0;               // Keeps track of total length of the data in the created packet
+
+                // Read and create a packet of at most 128 bytes (page size)
+                while (line != null && accumulator < 0x80)
+                {
+                    // Read CC field from the line
+                    byte dataLength = byte.Parse(line.Substring(0, 2), NumberStyles.HexNumber);
+
+                    accumulator += dataLength;      // Add new line's length to the length field
+
+                    // Read XX...XX field
+                    for (int i = 0; i < dataLength; i++)
+                    {
+                        data.Add(byte.Parse(line.Substring(i + i + 8, 2), NumberStyles.HexNumber));
+                    }
+                    
+                    line = reader.ReadLine().TrimStart(':');
+
+                    // Check the TT field to see if this is the last line of the file
+                    if (byte.Parse(line.Substring(6, 2), NumberStyles.HexNumber) != 0x00)
+                        break;      // If it is the last line, don't read it and exit loop
+                }
+
+                data[2] = accumulator;
+                data.Add(CRC_EOP);                  // Add the CRC_EOP to end of the list
+
+                // Add the data and address list to our programData and addresses lists
+                programData.Add(data.ToArray());
+                programAddresses.Add(address.ToArray());
+            }
+
+            //Print contents of the lists
+            if (print)
+            {
+                Console.WriteLine("========== Program Data ==========\n");
+                foreach (byte[] b in programData)
+                {
+                    for (int i = 0; i < b.Length; i++)
+                    {
+                        Console.Write("[{0:X2}] ", b[i]);
+                    }
+                    Console.WriteLine();
+                }
+
+                Console.WriteLine("\n========== Addresses ==========\n");
+                foreach (byte[] b in programAddresses)
+                {
+                    for (int i = 0; i < b.Length; i++)
+                    {
+                        Console.Write("[{0:X2}] ", b[i]);
+                    }
+                    Console.WriteLine();
+                }
+            }
         }
     }
 }

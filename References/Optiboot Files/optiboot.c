@@ -566,6 +566,7 @@ int main(void) {
       getch();
 
       // If we are in RWW section, immediately start page erase
+      // INSHAL: Boot page erase clears the page (128 bytes) the provided address is in
       if (address < NRWWSTART) __boot_page_erase_short((uint16_t)(void*)address);
 
       // While that is going on, read in page contents
