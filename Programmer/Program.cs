@@ -58,11 +58,54 @@ namespace TestProgrammer
         
         static void Main(string[] args)
         {
-            List<byte[]> programData = new List<byte[]>();
-            List<byte[]> programAddresses = new List<byte[]>();
+            //List<byte[]> programData = new List<byte[]>();
+            //List<byte[]> programAddresses = new List<byte[]>();
 
-            readHexFile("Blink.hex", ref programData, ref programAddresses);
-            programBoard("COM13", programAddresses, programData);
+            //readHexFile("Blink.hex", ref programData, ref programAddresses);
+            //programBoard("COM13", programAddresses, programData);
+
+            // A buffer to hold data being sent
+            byte[] buff;
+
+            // Initialize serial port on which the Arduino is
+            SerialPort ser = new SerialPort("COM14", 115200, Parity.None, 8, StopBits.One);
+
+            // Open the port for transmission
+            ser.Open();
+
+            // Reset the board
+            Console.WriteLine("Resetting the board...\n");
+            ser.DtrEnable = !ser.DtrEnable;     // Toggle DTR
+            ser.DtrEnable = !ser.DtrEnable;     // Toggle DTR
+
+            // Code segment for GET_SYNC
+            buff = new byte[] { STK_GET_SYNC, CRC_EOP };
+
+            for (int i = 0; i < 3; i++)
+            {
+                Console.WriteLine("Send: [{0:X2}] [{1:X2}]", buff[0], buff[1]);
+                ser.Write(buff, 0, buff.Length);
+                Thread.Sleep(35);                  // Adds a delay
+            }
+
+            getResponse(ser);
+
+            // Enter Programming Mode
+            buff = new byte[] { STK_ENTER_PROGMODE, CRC_EOP };
+
+            ser.Write(buff, 0, buff.Length);
+            Console.WriteLine("Send: [{0:X2}] [{1:X2}]", buff[0], buff[1]);
+
+            getResponse(ser);
+
+            Console.ReadKey();
+
+            buff = new byte[] { STK_LEAVE_PROGMODE, CRC_EOP };
+
+            ser.Write(buff, 0, buff.Length);
+            Console.WriteLine("Send: [{0:X2}] [{1:X2}]", buff[0], buff[1]);
+
+            getResponse(ser);
 
             Console.WriteLine("Done.");
             Console.ReadKey();
@@ -80,7 +123,7 @@ namespace TestProgrammer
             List<byte> response = new List<byte>(); // A list that holds all the received data
             byte rByte = 0xFF;          // Holds a byte of data recieved from the board
             long timer = 1000000;       // Timer to stop app if nothing is received
-
+ 
             while (ser.BytesToRead == 0 && timer > 0)   // Wait for data to be available
                 timer--;    // Decrement timer
             
@@ -91,7 +134,7 @@ namespace TestProgrammer
                 Environment.Exit(1);
             }
 
-            while (rByte != 0x10)
+            while (ser.BytesToRead > 0)
             {
                 rByte = (byte)ser.ReadByte();                // Read the incoming byte
                 response.Add(rByte);
