@@ -48,12 +48,26 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="BlankProgram.hex">
+    <None Include="Blank.hex">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Blink.hex">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Optiboot\makeall" />
+    <None Include="Optiboot\Makefile" />
+    <None Include="Optiboot\omake" />
+    <None Include="Optiboot\omake.bat" />
+    <None Include="Optiboot\optiboot_atmega328.hex" />
+    <None Include="Optiboot\upload.bat" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Optiboot\boot.h" />
+    <Content Include="Optiboot\optiboot.c" />
+    <Content Include="Optiboot\optiboot_atmega328.lst" />
+    <Content Include="Optiboot\pin_defs.h" />
+    <Content Include="Optiboot\README.TXT" />
+    <Content Include="Optiboot\stk500.h" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

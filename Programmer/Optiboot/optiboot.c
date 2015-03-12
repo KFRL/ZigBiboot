@@ -5,9 +5,6 @@
 /*                                                        */
 /* Arduino-maintained version : See README.TXT            */
 /* http://code.google.com/p/arduino/                      */
-/*  It is the intent that changes not relevant to the     */
-/*  Arduino production envionment get moved from the      */
-/*  optiboot project to the arduino project in "lumps."   */
 /*                                                        */
 /* Heavily optimised bootloader that is faster and        */
 /* smaller than the Arduino standard bootloader           */
@@ -32,21 +29,15 @@
 /*   ATmega168 based devices  (Diecimila etc)             */
 /*   ATmega328P based devices (Duemilanove etc)           */
 /*                                                        */
-/* Beta test (believed working.)                          */
-/*   ATmega8 based devices (Arduino legacy)               */
-/*   ATmega328 non-picopower devices                      */
-/*   ATmega644P based devices (Sanguino)                  */
-/*   ATmega1284P based devices                            */
+/* Alpha test                                             */
 /*   ATmega1280 based devices (Arduino Mega)              */
 /*                                                        */
-/* Alpha test                                             */
-/*   ATmega32                                             */
-/*                                                        */
 /* Work in progress:                                      */
+/*   ATmega644P based devices (Sanguino)                  */
 /*   ATtiny84 based devices (Luminet)                     */
 /*                                                        */
 /* Does not support:                                      */
-/*   USB based devices (eg. Teensy, Leonardo)             */
+/*   USB based devices (eg. Teensy)                       */
 /*                                                        */
 /* Assumptions:                                           */
 /*   The code makes several assumptions that reduce the   */
@@ -122,10 +113,6 @@
 /* Bootloader timeout period, in milliseconds.            */
 /* 500,1000,2000,4000,8000 supported.                     */
 /*                                                        */
-/* UART:                                                  */
-/* UART number (0..n) for devices with more than          */
-/* one hardware uart (644P, 1284P, etc)                   */
-/*                                                        */
 /**********************************************************/
 
 /**********************************************************/
@@ -138,50 +125,13 @@
 /*  repository and was distributed with Arduino 0022.     */
 /* Version 4 starts with the arduino repository commit    */
 /*  that brought the arduino repository up-to-date with   */
-/*  the optiboot source tree changes since v3.            */
-/* Version 5 was created at the time of the new Makefile  */
-/*  structure (Mar, 2013), even though no binaries changed*/
-/* It would be good if versions implemented outside the   */
-/*  official repository used an out-of-seqeunce version   */
-/*  number (like 104.6 if based on based on 4.5) to       */
-/*  prevent collisions.                                   */
+/* the optiboot source tree changes since v3.             */
 /*                                                        */
 /**********************************************************/
 
 /**********************************************************/
 /* Edit History:					  */
 /*							  */
-/* Mar 2013                                               */
-/* 5.0 WestfW: Major Makefile restructuring.              */
-/*             See Makefile and pin_defs.h                */
-/*             (no binary changes)                        */
-/*                                                        */
-/* 4.6 WestfW/Pito: Add ATmega32 support                  */
-/* 4.6 WestfW/radoni: Don't set LED_PIN as an output if   */
-/*                    not used. (LED_START_FLASHES = 0)   */
-/* Jan 2013						  */
-/* 4.6 WestfW/dkinzer: use autoincrement lpm for read     */
-/* 4.6 WestfW/dkinzer: pass reset cause to app in R2      */
-/* Mar 2012                                               */
-/* 4.5 WestfW: add infrastructure for non-zero UARTS.     */
-/* 4.5 WestfW: fix SIGNATURE_2 for m644 (bad in avr-libc) */
-/* Jan 2012:                                              */
-/* 4.5 WestfW: fix NRWW value for m1284.                  */
-/* 4.4 WestfW: use attribute OS_main instead of naked for */
-/*             main().  This allows optimizations that we */
-/*             count on, which are prohibited in naked    */
-/*             functions due to PR42240.  (keeps us less  */
-/*             than 512 bytes when compiler is gcc4.5     */
-/*             (code from 4.3.2 remains the same.)        */
-/* 4.4 WestfW and Maniacbug:  Add m1284 support.  This    */
-/*             does not change the 328 binary, so the     */
-/*             version number didn't change either. (?)   */
-/* June 2011:                                             */
-/* 4.4 WestfW: remove automatic soft_uart detect (didn't  */
-/*             know what it was doing or why.)  Added a   */
-/*             check of the calculated BRG value instead. */
-/*             Version stays 4.4; existing binaries are   */
-/*             not changed.                               */
 /* 4.4 WestfW: add initialization of address to keep      */
 /*             the compiler happy.  Change SC'ed targets. */
 /*             Return the SW version via READ PARAM       */
@@ -193,8 +143,8 @@
 /* 4.1 WestfW: put version number in binary.		  */
 /**********************************************************/
 
-#define OPTIBOOT_MAJVER 5
-#define OPTIBOOT_MINVER 0
+#define OPTIBOOT_MAJVER 4
+#define OPTIBOOT_MINVER 4
 
 #define MAKESTR(a) #a
 #define MAKEVER(a, b) MAKESTR(a*256+b)
@@ -238,44 +188,11 @@ asm("  .section .version\n"
 #endif
 #endif
 
-#ifndef UART
-#define UART 0
-#endif
-
-#define BAUD_SETTING (( (F_CPU + BAUD_RATE * 4L) / ((BAUD_RATE * 8L))) - 1 )
-#define BAUD_ACTUAL (F_CPU/(8 * ((BAUD_SETTING)+1)))
-#define BAUD_ERROR (( 100*(BAUD_RATE - BAUD_ACTUAL) ) / BAUD_RATE)
-
-#if BAUD_ERROR >= 5
-#error BAUD_RATE error greater than 5%
-#elif BAUD_ERROR <= -5
-#error BAUD_RATE error greater than -5%
-#elif BAUD_ERROR >= 2
-#warning BAUD_RATE error greater than 2%
-#elif BAUD_ERROR <= -2
-#warning BAUD_RATE error greater than -2%
-#endif
-
-#if 0
 /* Switch in soft UART for hard baud rates */
-/*
- * I don't understand what this was supposed to accomplish, where the
- * constant "280" came from, or why automatically (and perhaps unexpectedly)
- * switching to a soft uart is a good thing, so I'm undoing this in favor
- * of a range check using the same calc used to config the BRG...
- */
 #if (F_CPU/BAUD_RATE) > 280 // > 57600 for 16MHz
 #ifndef SOFT_UART
 #define SOFT_UART
 #endif
-#endif
-#else // 0
-#if (F_CPU + BAUD_RATE * 4L) / (BAUD_RATE * 8L) - 1 > 250
-#error Unachievable baud rate (too slow) BAUD_RATE 
-#endif // baud rate slow check
-#if (F_CPU + BAUD_RATE * 4L) / (BAUD_RATE * 8L) - 1 < 3
-#error Unachievable baud rate (too fast) BAUD_RATE 
-#endif // baud rate fastn check
 #endif
 
 /* Watchdog settings */
@@ -297,9 +214,11 @@ asm("  .section .version\n"
 /* The main function is in init9, which removes the interrupt vector table */
 /* we don't need. It is also 'naked', which means the compiler does not    */
 /* generate any entry or exit code itself. */
-int main(void) __attribute__ ((OS_main)) __attribute__ ((section (".init9")));
+int main(void) __attribute__ ((naked)) __attribute__ ((section (".init9")));
 void putch(char);
+void putpacket(char);
 uint8_t getch(void);
+uint8_t getpacket(void);
 static inline void getNch(uint8_t); /* "static inline" is a compiler hint to reduce code size */
 void verifySpace();
 static inline void flash_led(uint8_t);
@@ -309,36 +228,15 @@ void watchdogConfig(uint8_t x);
 #ifdef SOFT_UART
 void uartDelay() __attribute__ ((naked));
 #endif
-void appStart(uint8_t rstFlags) __attribute__ ((naked));
+void appStart() __attribute__ ((naked));
 
-/*
- * NRWW memory
- * Addresses below NRWW (Non-Read-While-Write) can be programmed while
- * continuing to run code from flash, slightly speeding up programming
- * time.  Beware that Atmel data sheets specify this as a WORD address,
- * while optiboot will be comparing against a 16-bit byte address.  This
- * means that on a part with 128kB of memory, the upper part of the lower
- * 64k will get NRWW processing as well, even though it doesn't need it.
- * That's OK.  In fact, you can disable the overlapping processing for
- * a part entirely by setting NRWWSTART to zero.  This reduces code
- * space a bit, at the expense of being slightly slower, overall.
- *
- * RAMSTART should be self-explanatory.  It's bigger on parts with a
- * lot of peripheral registers.
- */
 #if defined(__AVR_ATmega168__)
 #define RAMSTART (0x100)
 #define NRWWSTART (0x3800)
-#elif defined(__AVR_ATmega328P__) || defined(__AVR_ATmega32__)
+#elif defined(__AVR_ATmega328P__)
 #define RAMSTART (0x100)
 #define NRWWSTART (0x7000)
 #elif defined (__AVR_ATmega644P__)
-#define RAMSTART (0x100)
-#define NRWWSTART (0xE000)
-// correct for a bug in avr-libc
-#undef SIGNATURE_2
-#define SIGNATURE_2 0x0A
-#elif defined (__AVR_ATmega1284P__)
 #define RAMSTART (0x100)
 #define NRWWSTART (0xE000)
 #elif defined(__AVR_ATtiny84__)
@@ -361,65 +259,51 @@ void appStart(uint8_t rstFlags) __attribute__ ((naked));
 #define wdtVect (*(uint16_t*)(RAMSTART+SPM_PAGESIZE*2+6))
 #endif
 
-/*
- * Handle devices with up to 4 uarts (eg m1280.)  Rather inelegantly.
- * Note that mega8/m32 still needs special handling, because ubrr is handled
- * differently.
- */
-#if UART == 0
-# define UART_SRA UCSR0A
-# define UART_SRB UCSR0B
-# define UART_SRC UCSR0C
-# define UART_SRL UBRR0L
-# define UART_UDR UDR0
-#elif UART == 1
-#if !defined(UDR1)
-#error UART == 1, but no UART1 on device
+#define XBEE
+#define XBEE_SEND
+#define XBEE_RECV
+//#define XBEE_TEST
+
+#ifdef XBEE_TEST
+#ifndef XBEE
+#define XBEE
 #endif
-# define UART_SRA UCSR1A
-# define UART_SRB UCSR1B
-# define UART_SRC UCSR1C
-# define UART_SRL UBRR1L
-# define UART_UDR UDR1
-#elif UART == 2
-#if !defined(UDR2)
-#error UART == 2, but no UART2 on device
+#ifndef XBEE_SEND
+#define XBEE_SEND
 #endif
-# define UART_SRA UCSR2A
-# define UART_SRB UCSR2B
-# define UART_SRC UCSR2C
-# define UART_SRL UBRR2L
-# define UART_UDR UDR2
-#elif UART == 3
-#if !defined(UDR1)
-#error UART == 3, but no UART3 on device
+#ifndef XBEE_RECV
+#define XBEE_RECV
 #endif
-# define UART_SRA UCSR3A
-# define UART_SRB UCSR3B
-# define UART_SRC UCSR3C
-# define UART_SRL UBRR3L
-# define UART_UDR UDR3
 #endif
 
-/*
- *	INSHAL: It is VERY IMPORTANT to know basic bitwise operations. I have listed a few.
- * 	Whenever you see _BV(num), think "1 << num" which will give you 1 left shifted by the number.
- *	An example would be _BV(3) = 1 << 3 = 0b1000 = 0x08
- *	"a |= b" is equivalent to "a = a | b". These are the same as +=. -=, *= and /= operators.
- *	There are also &=, ^= and ~ operators. 
- *	See http://en.wikipedia.org/wiki/Operators_in_C_and_C%2B%2B#Compound_assignment_operators.
- *	OR is used to switch on a particular bit......................	a |= _BV(num)
- *	AND is used in conjunction with NOT to switch off an bit......	a &= ~_BV(num)
- *	XOR can be used to toggle a bit...............................	a ^= _BV(num)
- */
+#ifdef XBEE
+// XBee information
+#define DELIMITER 126     // decimal for 0x7E
+#define LENGTH_UPPER 0    // decimal for 0x00
+#define LENGTH_LOWER 12   // decimal for 0x0C
+#define FRAME_TYPE 00     // decimal for 0x00, TX 64-bit request
+#define FRAME_ID 1        // decimal for 0x01
+#define OPTIONS 0         // decimal for 0x00, default options
+#define FRAME_SUM 200     // decimal for 0xC8, sum of all the bytes before the payload
 
+// TODO: Make this dynamic
+uint8_t xbeeAddress[8];
+#endif
 
 /* main program starts here */
 int main(void) {
-  /*
-   * INSHAL: An 8 bit int used to store data from and for the 8-bit registers in the 
-   * controller.
-   */
+
+#ifdef XBEE
+  xbeeAddress[0] = 0x00;
+  xbeeAddress[1] = 0x13;
+  xbeeAddress[2] = 0xA2;
+  xbeeAddress[3] = 0x00;
+  xbeeAddress[4] = 0x40;
+  xbeeAddress[5] = 0x00;
+  xbeeAddress[6] = 0x98;
+  xbeeAddress[7] = 0x3A;
+#endif
+
   uint8_t ch;
 
   /*
@@ -427,9 +311,6 @@ int main(void) {
    * them, and also saves space because code no longer stores to memory.
    * (initializing address keeps the compiler happy, but isn't really
    *  necessary, and uses 4 bytes of flash.)
-	 *
-	 *	INSHAL: Here a 16 bit address variable is declared because 2 registers are used
-	 * 	for address caclulations. See datasheet Section 7 Page 9, 10 for an explanantion.
    */
   register uint16_t address = 0;
   register uint8_t  length;
@@ -443,48 +324,39 @@ int main(void) {
   //
   // If not, uncomment the following instructions:
   // cli();
-  //
-  // INSHAL: Assembly language code. Clears "zero reg". Not sure what that means. Initialization?
   asm volatile ("clr __zero_reg__");
-#if defined(__AVR_ATmega8__) || defined (__AVR_ATmega32__)
+#ifdef __AVR_ATmega8__
   SP=RAMEND;  // This is done by hardware reset
 #endif
 
   // Adaboot no-wait mod
+  ch = MCUSR;
+  MCUSR = 0;
+  if (!(ch & _BV(EXTRF))) appStart();
 
-  // INSHAL: MCUSR stands for MCU Status Register. See Datasheet Section 11.9.1. The values are basically
-  // for knowing why a reset occured.
-  ch = MCUSR; 								// Stores MCU Status Register's content in ch
-  MCUSR = 0;								// Clears MCUSR
-  if (!(ch & _BV(EXTRF))) appStart(ch);		// INSHAL: If an external reset (EXTFR: EXTernal Reset Flag) occured
-
-  // INSHAL: Refer to Section 20 of the datasheet for the following.
 #if LED_START_FLASHES > 0
   // Set up Timer 1 for timeout counter
   TCCR1B = _BV(CS12) | _BV(CS10); // div 1024
 #endif
 #ifndef SOFT_UART
-#if defined(__AVR_ATmega8__) || defined (__AVR_ATmega32__)
+#ifdef __AVR_ATmega8__
   UCSRA = _BV(U2X); //Double speed mode USART
   UCSRB = _BV(RXEN) | _BV(TXEN);  // enable Rx & Tx
   UCSRC = _BV(URSEL) | _BV(UCSZ1) | _BV(UCSZ0);  // config USART; 8N1
   UBRRL = (uint8_t)( (F_CPU + BAUD_RATE * 4L) / (BAUD_RATE * 8L) - 1 );
 #else
-  UART_SRA = _BV(U2X0); //Double speed mode USART0
-  UART_SRB = _BV(RXEN0) | _BV(TXEN0);
-  UART_SRC = _BV(UCSZ00) | _BV(UCSZ01);
-  UART_SRL = (uint8_t)( (F_CPU + BAUD_RATE * 4L) / (BAUD_RATE * 8L) - 1 );
+  UCSR0A = _BV(U2X0); //Double speed mode USART0
+  UCSR0B = _BV(RXEN0) | _BV(TXEN0);
+  UCSR0C = _BV(UCSZ00) | _BV(UCSZ01);
+  UBRR0L = (uint8_t)( (F_CPU + BAUD_RATE * 4L) / (BAUD_RATE * 8L) - 1 );
 #endif
 #endif
 
   // Set up watchdog to trigger after 500ms
-  // INSHAL: We can change this value to increase the bootloader's running time.
-  watchdogConfig(WATCHDOG_1S);
+  watchdogConfig(WATCHDOG_2S);
 
-#if (LED_START_FLASHES > 0) || defined(LED_DATA_FLASH)
   /* Set LED pin as output */
   LED_DDR |= _BV(LED);
-#endif
 
 #ifdef SOFT_UART
   /* Set TX pin as output */
@@ -496,88 +368,46 @@ int main(void) {
   flash_led(LED_START_FLASHES * 2);
 #endif
 
+  putch(0x04);
+
   /* Forever loop */
   for (;;) {
     /* get character from UART */
-    ch = getch();
+    ch = getpacket();
 
-    if(ch == STK_GET_PARAMETER) {
-      unsigned char which = getch();
-      verifySpace();
-      if (which == 0x82) {
-	/*
-	 * Send optiboot version as "minor SW version"
-	 */
-	putch(OPTIBOOT_MINVER);
-      } else if (which == 0x81) {
-	  putch(OPTIBOOT_MAJVER);
-      } else {
-	/*
-	 * GET PARAMETER returns a generic 0x03 reply for
-         * other parameters - enough to keep Avrdude happy
-	 */
-	putch(0x03);
-      }
-    }
-    else if(ch == STK_SET_DEVICE) {
-      // SET DEVICE is ignored
-      getNch(20);
-    }
-    else if(ch == STK_SET_DEVICE_EXT) {
-      // SET DEVICE EXT is ignored
-      getNch(5);
-    }
-    else if(ch == STK_LOAD_ADDRESS) {
+	if(ch == STK_LOAD_ADDRESS) {
       // LOAD ADDRESS
       uint16_t newAddress;
-      newAddress = getch();
-      newAddress = (newAddress & 0xff) | (getch() << 8);
+      newAddress = getpacket();
+      newAddress = (newAddress & 0xff) | (getpacket() << 8);
 #ifdef RAMPZ
       // Transfer top bit to RAMPZ
       RAMPZ = (newAddress & 0x8000) ? 1 : 0;
 #endif
-      // INSHAL: This works because words are 16 bits wide. Doubling the address
-      // would result in twice as many places to point to while reducing word to a byte
-      // 16/2 = 8 bits = 1 byte
-      // Think of it like having multiple houses (words) having two members (bytes) each,
-      // each that has an address as "0b00111000". If you append another bit to the address,
-      // you create an address for the individual members. "0b00111000 0" can point to the first
-      // and "0b00111000 1" can point to the second.
-      // Note the address does NOT become 17 bits wide. Overflow is a possibilty.
       newAddress += newAddress; // Convert from word address to byte address
       address = newAddress;
       verifySpace();
     }
-    else if(ch == STK_UNIVERSAL) {
-      // UNIVERSAL command is ignored
-      getNch(4);
-      putch(0x00);
-    }
     /* Write memory, length is big endian and is in bytes */
     else if(ch == STK_PROG_PAGE) {
-			// TODO: Study this section by simulating it.
-
       // PROGRAM PAGE - we support flash programming only, not EEPROM
       uint8_t *bufPtr;
       uint16_t addrPtr;
 
-      getch();			/* getlen() */
-      length = getch();
-      getch();
+      getpacket();			/* getlen() */
+      length = getpacket();
+      getpacket();
 
       // If we are in RWW section, immediately start page erase
-      // INSHAL: Boot page erase clears the page (128 bytes) the provided address is in
       if (address < NRWWSTART) __boot_page_erase_short((uint16_t)(void*)address);
 
       // While that is going on, read in page contents
       bufPtr = buff;
-      do *bufPtr++ = getch();
+      do *bufPtr++ = getpacket();
       while (--length);
 
       // If we are in NRWW section, page erase has to be delayed until now.
-      // Todo: Take RAMPZ into account (not doing so just means that we will
-      //  treat the top of both "pages" of flash as NRWW, for a slight speed
-      //  decrease, so fixing this is not urgent.)
+      // Todo: Take RAMPZ into account
       if (address >= NRWWSTART) __boot_page_erase_short((uint16_t)(void*)address);
 
       // Read command terminator, start reply
@@ -631,13 +461,13 @@ int main(void) {
     /* Read memory block mode, length is big endian.  */
     else if(ch == STK_READ_PAGE) {
       // READ PAGE - we only read flash
-      getch();			/* getlen() */
-      length = getch();
-      getch();
+      getpacket();			/* getlen() */
+      length = getpacket();
+      getpacket();
 
       verifySpace();
-      do {
 #ifdef VIRTUAL_BOOT_PARTITION
+      do {
         // Undo vector patch in bottom page so verify passes
         if (address == 0)       ch=rstVect & 0xff;
         else if (address == 1)  ch=rstVect >> 8;
@@ -645,50 +475,54 @@ int main(void) {
         else if (address == 9) ch=wdtVect >> 8;
         else ch = pgm_read_byte_near(address);
         address++;
-#elif defined(RAMPZ)
-        // Since RAMPZ should already be set, we need to use EPLM directly.
-        // Also, we can use the autoincrement version of lpm to update "address"
-        //      do putch(pgm_read_byte_near(address++));
-        //      while (--length);
-        // read a Flash and increment the address (may increment RAMPZ)
-        __asm__ ("elpm %0,Z+\n" : "=r" (ch), "=z" (address): "1" (address));
-#else
-        // read a Flash byte and increment the address
-        __asm__ ("lpm %0,Z+\n" : "=r" (ch), "=z" (address): "1" (address));
-#endif
-        putch(ch);
+        putpacket(ch);
       } while (--length);
+#else
+#ifdef __AVR_ATmega1280__
+//      do putch(pgm_read_byte_near(address++));
+//      while (--length);
+      do {
+        uint8_t result;
+        __asm__ ("elpm %0,Z\n":"=r"(result):"z"(address));
+        putpacket(result);
+        address++;
+      }
+      while (--length);
+#else
+      do putpacket(pgm_read_byte_near(address++));
+      while (--length);
+#endif
+#endif
     }
 
     /* Get device signature bytes  */
-    else if(ch == STK_READ_SIGN) {
-      // READ SIGN - return what Avrdude wants to hear
-      verifySpace();
-      putch(SIGNATURE_0);
-      putch(SIGNATURE_1);
-      putch(SIGNATURE_2);
-    }
-    else if (ch == STK_LEAVE_PROGMODE) { /* 'Q' */
+    else if (ch == STK_LEAVE_PROGMODE) {
       // Adaboot no-wait mod
       watchdogConfig(WATCHDOG_16MS);
       verifySpace();
     }
+    else if (ch == STK_ENTER_PROGMODE)
+    {
+    	// Switch off watchdog timer when programming
+    	watchdogConfig(WATCHDOG_OFF);
+    	verifySpace();
+    }
     else {
-      // This covers the response to commands like STK_ENTER_PROGMODE
+#ifdef XBEE_TEST
+		putpacket(ch);
+#endif
+      // This covers the response to other commands
       verifySpace();
     }
-    // INSHAL: End of packet from the bootloader.
-    putch(STK_OK);
+    putpacket(STK_OK);
   }
 }
 
 void putch(char ch) {
 #ifndef SOFT_UART
-  while (!(UART_SRA & _BV(UDRE0)));
-  UART_UDR = ch;
+  while (!(UCSR0A & _BV(UDRE0)));
+  UDR0 = ch;
 #else
-  // TODO: Understand the assembly langauge here
-
   __asm__ __volatile__ (
     "   com %[ch]\n" // ones complement, carry set
     "   sec\n"
@@ -714,11 +548,65 @@ void putch(char ch) {
 #endif
 }
 
+// Creates a data packet and sends it to Xbee
+void putpacket(char cha)
+{
+#ifdef XBEE_SEND
+	uint8_t checksum = FRAME_SUM;
+   checksum += cha;
+   checksum = 0xFF - (checksum & 0xFF);
+  
+   putch(DELIMITER);
+   putch(LENGTH_UPPER);
+   putch(LENGTH_LOWER);
+   putch(FRAME_TYPE);
+   putch(FRAME_ID);
+
+   uint8_t i = 0;
+   for(; i < 8; i++)
+     putch(xbeeAddress[i]);
+   
+   putch(OPTIONS);
+#endif
+
+   putch(cha);
+
+#ifdef XBEE
+   putch(checksum);
+#endif
+}
+
+// A function to handle receiving XBee packets
+uint8_t getpacket(void)
+{
+  uint8_t ch =  getch();
+
+#ifdef XBEE_RECV
+  if (ch == 126)
+  {
+    getch();  // drop the higher byte of the length
+    uint8_t length = getch();
+    do
+    {
+      getch();
+    }
+    while (--length != 1);
+
+    ch = getch();
+    getch();
+
+    return ch;
+  }
+#endif
+
+  return ch;
+}
+
 uint8_t getch(void) {
   uint8_t ch;
 
 #ifdef LED_DATA_FLASH
-#if defined(__AVR_ATmega8__) || defined (__AVR_ATmega32__)
+#ifdef __AVR_ATmega8__
   LED_PORT ^= _BV(LED);
 #else
   LED_PIN |= _BV(LED);
@@ -750,12 +638,9 @@ uint8_t getch(void) {
       "r25"
 );
 #else
-  while(!(UART_SRA & _BV(RXC0)))
+  while(!(UCSR0A & _BV(RXC0)))
     ;
-  if (!(UART_SRA & _BV(FE0))) {
-
-  		// INSHAL: Read the following.
-
+  if (!(UCSR0A & _BV(FE0))) {
       /*
        * A Framing Error indicates (probably) that something is talking
        * to us at the wrong bit rate.  Assume that this is because it
@@ -767,11 +652,11 @@ uint8_t getch(void) {
     watchdogReset();
   }
   
-  ch = UART_UDR;
+  ch = UDR0;
 #endif
 
 #ifdef LED_DATA_FLASH
-#if defined(__AVR_ATmega8__) || defined (__AVR_ATmega32__)
+#ifdef __AVR_ATmega8__
   LED_PORT ^= _BV(LED);
 #else
   LED_PIN |= _BV(LED);
@@ -782,7 +667,7 @@ uint8_t getch(void) {
 }
 
 #ifdef SOFT_UART
-// AVR305 equation: #define UART_B_VALUE (((F_CPU/BAUD_RATE)-23)/6)
+// AVR350 equation: #define UART_B_VALUE (((F_CPU/BAUD_RATE)-23)/6)
 // Adding 3 to numerator simulates nearest rounding for more accurate baud rates
 #define UART_B_VALUE (((F_CPU/BAUD_RATE)-20)/6)
 #if UART_B_VALUE > 255
@@ -801,24 +686,17 @@ void uartDelay() {
 #endif
 
 void getNch(uint8_t count) {
-  do getch(); while (--count);
+  do getpacket(); while (--count);
   verifySpace();
 }
 
 void verifySpace() {
-
-	// INSHAL: The packet format is very strict. If even a byte is misplaced, the 
-	// bootloader will switch to the app. Precautions should be taken during implementation.
-  if (getch() != CRC_EOP) {
+  if (getpacket() != CRC_EOP) {
     watchdogConfig(WATCHDOG_16MS);    // shorten WD timeout
     while (1)			      // and busy-loop so that WD causes
       ;				      //  a reset and app start.
   }
-  // INSHAL: If the controller isn't reset, then it'll send the following character. If the IDE
-  // receives this character, then it knows that the complete packet has arrived. Since each packet format
-  // is very strict, if a single byte is dropped, you won't have a ' ' (space) at the end of the message. It'll
-  // appear in ealier getch() calls and this one will timeout, returning '0x00' which will cause a reset.
-  putch(STK_INSYNC);
+  putpacket(STK_INSYNC);
 }
 
 #if LED_START_FLASHES > 0
@@ -827,7 +705,7 @@ void flash_led(uint8_t count) {
     TCNT1 = -(F_CPU/(1024*16));
     TIFR1 = _BV(TOV1);
     while(!(TIFR1 & _BV(TOV1)));
-#if defined(__AVR_ATmega8__)  || defined (__AVR_ATmega32__)
+#ifdef __AVR_ATmega8__
     LED_PORT ^= _BV(LED);
 #else
     LED_PIN |= _BV(LED);
@@ -849,16 +727,8 @@ void watchdogConfig(uint8_t x) {
   WDTCSR = x;
 }
 
-void appStart(uint8_t rstFlags) {
-  // save the reset flags in the designated register
-  //  This can be saved in a main program by putting code in .init0 (which
-  //  executes before normal c init code) to save R2 to a global variable.
-  __asm__ __volatile__ ("mov r2, %0\n" :: "r" (rstFlags));
-
+void appStart() {
   watchdogConfig(WATCHDOG_OFF);
-
-  // The below code resets the board. Don't be confused by the watchdog timer
-  // being turned off.
   __asm__ __volatile__ (
 #ifdef VIRTUAL_BOOT_PARTITION
     // Jump to WDT vector
