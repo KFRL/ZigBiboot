@@ -217,6 +217,7 @@ asm("  .section .version\n"
 int main(void) __attribute__ ((naked)) __attribute__ ((section (".init9")));
 void putch(char);
 void putpacket(char);
+uint8_t sendFailure();
 uint8_t getch(void);
 uint8_t getpacket(void);
 static inline void getNch(uint8_t); /* "static inline" is a compiler hint to reduce code size */
@@ -262,7 +263,7 @@ void appStart() __attribute__ ((naked));
 #define XBEE
 #define XBEE_SEND
 #define XBEE_RECV
-//#define XBEE_TEST
+#define XBEE_TEST
 
 #ifdef XBEE_TEST
 #ifndef XBEE
@@ -280,11 +281,15 @@ void appStart() __attribute__ ((naked));
 // XBee information
 #define DELIMITER 126     // decimal for 0x7E
 #define LENGTH_UPPER 0    // decimal for 0x00
-#define LENGTH_LOWER 12   // decimal for 0x0C
-#define FRAME_TYPE 00     // decimal for 0x00, TX 64-bit request
+#define LENGTH_LOWER 15   // decimal for 0x0F
+#define FRAME_TYPE 16     // decimal for 0x10, TX request
 #define FRAME_ID 1        // decimal for 0x01
+#define BROADCAST_RADIUS 0// decimal for 0x00
 #define OPTIONS 0         // decimal for 0x00, default options
-#define FRAME_SUM 200     // decimal for 0xC8, sum of all the bytes before the payload
+#define FRAME_SUM 245     // decimal for 0xC8, sum of all the bytes before the payload
+#define XBEE_ADDR_16H 255 // decimal for 0xFF
+#define XBEE_ADDR_16L 254 // decimal for 0xFE
+
 
 // TODO: Make this dynamic
 uint8_t xbeeAddress[8];
@@ -292,16 +297,16 @@ uint8_t xbeeAddress[8];
 
 /* main program starts here */
 int main(void) {
-
+	
 #ifdef XBEE
-  xbeeAddress[0] = 0x00;
-  xbeeAddress[1] = 0x13;
-  xbeeAddress[2] = 0xA2;
-  xbeeAddress[3] = 0x00;
-  xbeeAddress[4] = 0x40;
-  xbeeAddress[5] = 0x00;
-  xbeeAddress[6] = 0x98;
-  xbeeAddress[7] = 0x3A;
+	xbeeAddress[0] = 0x00;
+	xbeeAddress[1] = 0x13;
+	xbeeAddress[2] = 0xA2;
+	xbeeAddress[3] = 0x00;
+	xbeeAddress[4] = 0x40;
+	xbeeAddress[5] = 0xAD;
+	xbeeAddress[6] = 0xBE;
+	xbeeAddress[7] = 0x87;
 #endif
 
   uint8_t ch;
@@ -553,28 +558,55 @@ void putpacket(char cha)
 {
 #ifdef XBEE_SEND
 	uint8_t checksum = FRAME_SUM;
-   checksum += cha;
-   checksum = 0xFF - (checksum & 0xFF);
+	checksum += cha;
+	checksum = 0xFF - (checksum & 0xFF);
   
-   putch(DELIMITER);
-   putch(LENGTH_UPPER);
-   putch(LENGTH_LOWER);
-   putch(FRAME_TYPE);
-   putch(FRAME_ID);
+	putch(DELIMITER);
+	putch(LENGTH_UPPER);
+	putch(LENGTH_LOWER);
+	putch(FRAME_TYPE);
+	putch(FRAME_ID);
 
-   uint8_t i = 0;
-   for(; i < 8; i++)
-     putch(xbeeAddress[i]);
+	uint8_t i = 0;
+	for(; i < 8; i++)
+		putch(xbeeAddress[i]);
    
-   putch(OPTIONS);
+	putch(XBEE_ADDR_16H);
+	putch(XBEE_ADDR_16L);
+	putch(BROADCAST_RADIUS);
+	putch(OPTIONS);
 #endif
 
    putch(cha);
 
-#ifdef XBEE
+#ifdef XBEE_SEND
    putch(checksum);
+
+   // Until the acknowledgement packet results in success, keep 
+   // resending the packet
+   while (sendFailure()) putpacket(cha);
 #endif
 }
+
+#ifdef XBEE_SEND
+// A function to ensure delivery status
+uint8_t sendFailure()
+{
+	uint8_t ch = getch();
+	getch();  // drop the higher byte of the length
+	uint8_t length = getch();
+	do
+	{
+		getch();
+	} while (--length != 2);
+
+	ch = getch();
+	getch();
+	getch();
+
+	return ch;
+}
+#endif
 
 // A function to handle receiving XBee packets
 uint8_t getpacket(void)
@@ -597,6 +629,7 @@ uint8_t getpacket(void)
 
     return ch;
   }
+  else return 0x00;
 #endif
 
   return ch;

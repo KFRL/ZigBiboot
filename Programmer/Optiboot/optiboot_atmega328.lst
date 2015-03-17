@@ -3,29 +3,29 @@ optiboot_atmega328.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .text         00000236  00007c00  00007c00  00000074  2**1
+  0 .text         00000276  00007c00  00007c00  00000074  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  1 .version      00000002  00007ffe  00007ffe  000002aa  2**0
+  1 .version      00000002  00007ffe  00007ffe  000002ea  2**0
                   CONTENTS, READONLY
-  2 .bss          00000008  00800100  00800100  000002aa  2**0
+  2 .bss          00000008  00800100  00800100  000002ea  2**0
                   ALLOC
-  3 .debug_aranges 00000028  00000000  00000000  000002ac  2**0
+  3 .debug_aranges 00000028  00000000  00000000  000002ec  2**0
                   CONTENTS, READONLY, DEBUGGING
-  4 .debug_pubnames 0000008b  00000000  00000000  000002d4  2**0
+  4 .debug_pubnames 0000009b  00000000  00000000  00000314  2**0
                   CONTENTS, READONLY, DEBUGGING
-  5 .debug_info   0000030e  00000000  00000000  0000035f  2**0
+  5 .debug_info   0000034e  00000000  00000000  000003af  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_abbrev 00000184  00000000  00000000  0000066d  2**0
+  6 .debug_abbrev 0000019b  00000000  00000000  000006fd  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_line   0000045f  00000000  00000000  000007f1  2**0
+  7 .debug_line   000004db  00000000  00000000  00000898  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_frame  00000090  00000000  00000000  00000c50  2**2
+  8 .debug_frame  000000a0  00000000  00000000  00000d74  2**2
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_str    00000152  00000000  00000000  00000ce0  2**0
+  9 .debug_str    0000015e  00000000  00000000  00000e14  2**0
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_loc    000002b4  00000000  00000000  00000e32  2**0
+ 10 .debug_loc    000002d7  00000000  00000000  00000f72  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_ranges 00000080  00000000  00000000  000010e6  2**0
+ 11 .debug_ranges 00000088  00000000  00000000  00001249  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -38,643 +38,708 @@ uint8_t xbeeAddress[8];
 /* main program starts here */
 int main(void) {
     7c00:	10 92 00 01 	sts	0x0100, r1
-
+	
 #ifdef XBEE
-  xbeeAddress[0] = 0x00;
-  xbeeAddress[1] = 0x13;
+	xbeeAddress[0] = 0x00;
+	xbeeAddress[1] = 0x13;
     7c04:	83 e1       	ldi	r24, 0x13	; 19
     7c06:	80 93 01 01 	sts	0x0101, r24
-  xbeeAddress[2] = 0xA2;
+	xbeeAddress[2] = 0xA2;
     7c0a:	82 ea       	ldi	r24, 0xA2	; 162
     7c0c:	80 93 02 01 	sts	0x0102, r24
-  xbeeAddress[3] = 0x00;
+	xbeeAddress[3] = 0x00;
     7c10:	10 92 03 01 	sts	0x0103, r1
-  xbeeAddress[4] = 0x40;
+	xbeeAddress[4] = 0x40;
     7c14:	80 e4       	ldi	r24, 0x40	; 64
     7c16:	80 93 04 01 	sts	0x0104, r24
-  xbeeAddress[5] = 0x00;
-    7c1a:	10 92 05 01 	sts	0x0105, r1
-  xbeeAddress[6] = 0x98;
-    7c1e:	88 e9       	ldi	r24, 0x98	; 152
-    7c20:	80 93 06 01 	sts	0x0106, r24
-  xbeeAddress[7] = 0x3A;
-    7c24:	8a e3       	ldi	r24, 0x3A	; 58
-    7c26:	80 93 07 01 	sts	0x0107, r24
+	xbeeAddress[5] = 0xAD;
+    7c1a:	8d ea       	ldi	r24, 0xAD	; 173
+    7c1c:	80 93 05 01 	sts	0x0105, r24
+	xbeeAddress[6] = 0xBE;
+    7c20:	8e eb       	ldi	r24, 0xBE	; 190
+    7c22:	80 93 06 01 	sts	0x0106, r24
+	xbeeAddress[7] = 0x87;
+    7c26:	87 e8       	ldi	r24, 0x87	; 135
+    7c28:	80 93 07 01 	sts	0x0107, r24
   //  SP points to RAMEND
   //  r1 contains zero
   //
   // If not, uncomment the following instructions:
   // cli();
   asm volatile ("clr __zero_reg__");
-    7c2a:	11 24       	eor	r1, r1
+    7c2c:	11 24       	eor	r1, r1
 #ifdef __AVR_ATmega8__
   SP=RAMEND;  // This is done by hardware reset
 #endif
 
   // Adaboot no-wait mod
   ch = MCUSR;
-    7c2c:	84 b7       	in	r24, 0x34	; 52
+    7c2e:	84 b7       	in	r24, 0x34	; 52
   MCUSR = 0;
-    7c2e:	14 be       	out	0x34, r1	; 52
+    7c30:	14 be       	out	0x34, r1	; 52
   if (!(ch & _BV(EXTRF))) appStart();
-    7c30:	81 ff       	sbrs	r24, 1
-    7c32:	fc d0       	rcall	.+504    	; 0x7e2c <appStart>
+    7c32:	81 ff       	sbrs	r24, 1
+    7c34:	1b d1       	rcall	.+566    	; 0x7e6c <appStart>
 
 #if LED_START_FLASHES > 0
   // Set up Timer 1 for timeout counter
   TCCR1B = _BV(CS12) | _BV(CS10); // div 1024
-    7c34:	85 e0       	ldi	r24, 0x05	; 5
-    7c36:	80 93 81 00 	sts	0x0081, r24
+    7c36:	85 e0       	ldi	r24, 0x05	; 5
+    7c38:	80 93 81 00 	sts	0x0081, r24
   UCSRA = _BV(U2X); //Double speed mode USART
   UCSRB = _BV(RXEN) | _BV(TXEN);  // enable Rx & Tx
   UCSRC = _BV(URSEL) | _BV(UCSZ1) | _BV(UCSZ0);  // config USART; 8N1
   UBRRL = (uint8_t)( (F_CPU + BAUD_RATE * 4L) / (BAUD_RATE * 8L) - 1 );
 #else
   UCSR0A = _BV(U2X0); //Double speed mode USART0
-    7c3a:	82 e0       	ldi	r24, 0x02	; 2
-    7c3c:	80 93 c0 00 	sts	0x00C0, r24
+    7c3c:	82 e0       	ldi	r24, 0x02	; 2
+    7c3e:	80 93 c0 00 	sts	0x00C0, r24
   UCSR0B = _BV(RXEN0) | _BV(TXEN0);
-    7c40:	88 e1       	ldi	r24, 0x18	; 24
-    7c42:	80 93 c1 00 	sts	0x00C1, r24
+    7c42:	88 e1       	ldi	r24, 0x18	; 24
+    7c44:	80 93 c1 00 	sts	0x00C1, r24
   UCSR0C = _BV(UCSZ00) | _BV(UCSZ01);
-    7c46:	86 e0       	ldi	r24, 0x06	; 6
-    7c48:	80 93 c2 00 	sts	0x00C2, r24
+    7c48:	86 e0       	ldi	r24, 0x06	; 6
+    7c4a:	80 93 c2 00 	sts	0x00C2, r24
   UBRR0L = (uint8_t)( (F_CPU + BAUD_RATE * 4L) / (BAUD_RATE * 8L) - 1 );
-    7c4c:	80 e1       	ldi	r24, 0x10	; 16
-    7c4e:	80 93 c4 00 	sts	0x00C4, r24
+    7c4e:	80 e1       	ldi	r24, 0x10	; 16
+    7c50:	80 93 c4 00 	sts	0x00C4, r24
 #endif
 #endif
 
   // Set up watchdog to trigger after 500ms
   watchdogConfig(WATCHDOG_2S);
-    7c52:	8f e0       	ldi	r24, 0x0F	; 15
-    7c54:	dd d0       	rcall	.+442    	; 0x7e10 <watchdogConfig>
+    7c54:	8f e0       	ldi	r24, 0x0F	; 15
+    7c56:	fc d0       	rcall	.+504    	; 0x7e50 <watchdogConfig>
 
   /* Set LED pin as output */
   LED_DDR |= _BV(LED);
-    7c56:	25 9a       	sbi	0x04, 5	; 4
-    7c58:	86 e0       	ldi	r24, 0x06	; 6
+    7c58:	25 9a       	sbi	0x04, 5	; 4
+    7c5a:	86 e0       	ldi	r24, 0x06	; 6
 }
 
 #if LED_START_FLASHES > 0
 void flash_led(uint8_t count) {
   do {
     TCNT1 = -(F_CPU/(1024*16));
-    7c5a:	20 e3       	ldi	r18, 0x30	; 48
-    7c5c:	3c ef       	ldi	r19, 0xFC	; 252
+    7c5c:	20 e3       	ldi	r18, 0x30	; 48
+    7c5e:	3c ef       	ldi	r19, 0xFC	; 252
     TIFR1 = _BV(TOV1);
-    7c5e:	91 e0       	ldi	r25, 0x01	; 1
+    7c60:	91 e0       	ldi	r25, 0x01	; 1
 }
 
 #if LED_START_FLASHES > 0
 void flash_led(uint8_t count) {
   do {
     TCNT1 = -(F_CPU/(1024*16));
-    7c60:	30 93 85 00 	sts	0x0085, r19
-    7c64:	20 93 84 00 	sts	0x0084, r18
+    7c62:	30 93 85 00 	sts	0x0085, r19
+    7c66:	20 93 84 00 	sts	0x0084, r18
     TIFR1 = _BV(TOV1);
-    7c68:	96 bb       	out	0x16, r25	; 22
+    7c6a:	96 bb       	out	0x16, r25	; 22
     while(!(TIFR1 & _BV(TOV1)));
-    7c6a:	b0 9b       	sbis	0x16, 0	; 22
-    7c6c:	fe cf       	rjmp	.-4      	; 0x7c6a <main+0x6a>
+    7c6c:	b0 9b       	sbis	0x16, 0	; 22
+    7c6e:	fe cf       	rjmp	.-4      	; 0x7c6c <main+0x6c>
 #ifdef __AVR_ATmega8__
     LED_PORT ^= _BV(LED);
 #else
     LED_PIN |= _BV(LED);
-    7c6e:	1d 9a       	sbi	0x03, 5	; 3
+    7c70:	1d 9a       	sbi	0x03, 5	; 3
 }
 #endif
 
 // Watchdog functions. These are only safe with interrupts turned off.
 void watchdogReset() {
   __asm__ __volatile__ (
-    7c70:	a8 95       	wdr
+    7c72:	a8 95       	wdr
     LED_PORT ^= _BV(LED);
 #else
     LED_PIN |= _BV(LED);
 #endif
     watchdogReset();
   } while (--count);
-    7c72:	81 50       	subi	r24, 0x01	; 1
-    7c74:	a9 f7       	brne	.-22     	; 0x7c60 <main+0x60>
+    7c74:	81 50       	subi	r24, 0x01	; 1
+    7c76:	a9 f7       	brne	.-22     	; 0x7c62 <main+0x62>
 #if LED_START_FLASHES > 0
   /* Flash onboard LED to signal entering of bootloader */
   flash_led(LED_START_FLASHES * 2);
 #endif
 
   putch(0x04);
-    7c76:	84 e0       	ldi	r24, 0x04	; 4
-    7c78:	83 d0       	rcall	.+262    	; 0x7d80 <putch>
-    7c7a:	ee 24       	eor	r14, r14
-    7c7c:	ff 24       	eor	r15, r15
+    7c78:	84 e0       	ldi	r24, 0x04	; 4
+    7c7a:	85 d0       	rcall	.+266    	; 0x7d86 <putch>
+    7c7c:	ee 24       	eor	r14, r14
+    7c7e:	ff 24       	eor	r15, r15
       ch = SPM_PAGESIZE / 2;
       do {
         uint16_t a;
         a = *bufPtr++;
         a |= (*bufPtr++) << 8;
         __boot_page_fill_short((uint16_t)(void*)addrPtr,a);
-    7c7e:	88 24       	eor	r8, r8
-    7c80:	83 94       	inc	r8
+    7c80:	88 24       	eor	r8, r8
+    7c82:	83 94       	inc	r8
         addrPtr += 2;
       } while (--ch);
 
       // Write from programming buffer
       __boot_page_write_short((uint16_t)(void*)address);
-    7c82:	b5 e0       	ldi	r27, 0x05	; 5
-    7c84:	9b 2e       	mov	r9, r27
+    7c84:	b5 e0       	ldi	r27, 0x05	; 5
+    7c86:	9b 2e       	mov	r9, r27
       boot_spm_busy_wait();
 
 #if defined(RWWSRE)
       // Reenable read access to flash
       boot_rww_enable();
-    7c86:	a1 e1       	ldi	r26, 0x11	; 17
-    7c88:	aa 2e       	mov	r10, r26
+    7c88:	a1 e1       	ldi	r26, 0x11	; 17
+    7c8a:	aa 2e       	mov	r10, r26
       do *bufPtr++ = getpacket();
       while (--length);
 
       // If we are in NRWW section, page erase has to be delayed until now.
       // Todo: Take RAMPZ into account
       if (address >= NRWWSTART) __boot_page_erase_short((uint16_t)(void*)address);
-    7c8a:	f3 e0       	ldi	r31, 0x03	; 3
-    7c8c:	bf 2e       	mov	r11, r31
+    7c8c:	f3 e0       	ldi	r31, 0x03	; 3
+    7c8e:	bf 2e       	mov	r11, r31
   putch(0x04);
 
   /* Forever loop */
   for (;;) {
     /* get character from UART */
     ch = getpacket();
-    7c8e:	ae d0       	rcall	.+348    	; 0x7dec <getpacket>
+    7c90:	8e d0       	rcall	.+284    	; 0x7dae <getpacket>
 
 	if(ch == STK_LOAD_ADDRESS) {
-    7c90:	85 35       	cpi	r24, 0x55	; 85
-    7c92:	79 f4       	brne	.+30     	; 0x7cb2 <main+0xb2>
+    7c92:	85 35       	cpi	r24, 0x55	; 85
+    7c94:	79 f4       	brne	.+30     	; 0x7cb4 <main+0xb4>
       // LOAD ADDRESS
       uint16_t newAddress;
       newAddress = getpacket();
-    7c94:	ab d0       	rcall	.+342    	; 0x7dec <getpacket>
+    7c96:	8b d0       	rcall	.+278    	; 0x7dae <getpacket>
       newAddress = (newAddress & 0xff) | (getpacket() << 8);
-    7c96:	e8 2e       	mov	r14, r24
-    7c98:	ff 24       	eor	r15, r15
-    7c9a:	a8 d0       	rcall	.+336    	; 0x7dec <getpacket>
-    7c9c:	08 2f       	mov	r16, r24
-    7c9e:	10 e0       	ldi	r17, 0x00	; 0
-    7ca0:	10 2f       	mov	r17, r16
-    7ca2:	00 27       	eor	r16, r16
-    7ca4:	0e 29       	or	r16, r14
-    7ca6:	1f 29       	or	r17, r15
+    7c98:	e8 2e       	mov	r14, r24
+    7c9a:	ff 24       	eor	r15, r15
+    7c9c:	88 d0       	rcall	.+272    	; 0x7dae <getpacket>
+    7c9e:	08 2f       	mov	r16, r24
+    7ca0:	10 e0       	ldi	r17, 0x00	; 0
+    7ca2:	10 2f       	mov	r17, r16
+    7ca4:	00 27       	eor	r16, r16
+    7ca6:	0e 29       	or	r16, r14
+    7ca8:	1f 29       	or	r17, r15
 #ifdef RAMPZ
       // Transfer top bit to RAMPZ
       RAMPZ = (newAddress & 0x8000) ? 1 : 0;
 #endif
       newAddress += newAddress; // Convert from word address to byte address
-    7ca8:	00 0f       	add	r16, r16
-    7caa:	11 1f       	adc	r17, r17
+    7caa:	00 0f       	add	r16, r16
+    7cac:	11 1f       	adc	r17, r17
       address = newAddress;
       verifySpace();
-    7cac:	b7 d0       	rcall	.+366    	; 0x7e1c <verifySpace>
-    7cae:	78 01       	movw	r14, r16
-    7cb0:	64 c0       	rjmp	.+200    	; 0x7d7a <main+0x17a>
+    7cae:	d6 d0       	rcall	.+428    	; 0x7e5c <verifySpace>
+    7cb0:	78 01       	movw	r14, r16
+    7cb2:	66 c0       	rjmp	.+204    	; 0x7d80 <main+0x180>
     }
     /* Write memory, length is big endian and is in bytes */
     else if(ch == STK_PROG_PAGE) {
-    7cb2:	84 36       	cpi	r24, 0x64	; 100
-    7cb4:	09 f0       	breq	.+2      	; 0x7cb8 <main+0xb8>
-    7cb6:	40 c0       	rjmp	.+128    	; 0x7d38 <main+0x138>
+    7cb4:	84 36       	cpi	r24, 0x64	; 100
+    7cb6:	09 f0       	breq	.+2      	; 0x7cba <main+0xba>
+    7cb8:	40 c0       	rjmp	.+128    	; 0x7d3a <main+0x13a>
       // PROGRAM PAGE - we support flash programming only, not EEPROM
       uint8_t *bufPtr;
       uint16_t addrPtr;
 
       getpacket();			/* getlen() */
-    7cb8:	99 d0       	rcall	.+306    	; 0x7dec <getpacket>
+    7cba:	79 d0       	rcall	.+242    	; 0x7dae <getpacket>
       length = getpacket();
-    7cba:	98 d0       	rcall	.+304    	; 0x7dec <getpacket>
-    7cbc:	08 2f       	mov	r16, r24
+    7cbc:	78 d0       	rcall	.+240    	; 0x7dae <getpacket>
+    7cbe:	08 2f       	mov	r16, r24
       getpacket();
-    7cbe:	96 d0       	rcall	.+300    	; 0x7dec <getpacket>
+    7cc0:	76 d0       	rcall	.+236    	; 0x7dae <getpacket>
 
       // If we are in RWW section, immediately start page erase
       if (address < NRWWSTART) __boot_page_erase_short((uint16_t)(void*)address);
-    7cc0:	80 e0       	ldi	r24, 0x00	; 0
-    7cc2:	e8 16       	cp	r14, r24
-    7cc4:	80 e7       	ldi	r24, 0x70	; 112
-    7cc6:	f8 06       	cpc	r15, r24
-    7cc8:	18 f4       	brcc	.+6      	; 0x7cd0 <main+0xd0>
-    7cca:	f7 01       	movw	r30, r14
-    7ccc:	b7 be       	out	0x37, r11	; 55
-    7cce:	e8 95       	spm
-    7cd0:	c0 e0       	ldi	r28, 0x00	; 0
-    7cd2:	d1 e0       	ldi	r29, 0x01	; 1
+    7cc2:	80 e0       	ldi	r24, 0x00	; 0
+    7cc4:	e8 16       	cp	r14, r24
+    7cc6:	80 e7       	ldi	r24, 0x70	; 112
+    7cc8:	f8 06       	cpc	r15, r24
+    7cca:	18 f4       	brcc	.+6      	; 0x7cd2 <main+0xd2>
+    7ccc:	f7 01       	movw	r30, r14
+    7cce:	b7 be       	out	0x37, r11	; 55
+    7cd0:	e8 95       	spm
+    7cd2:	c0 e0       	ldi	r28, 0x00	; 0
+    7cd4:	d1 e0       	ldi	r29, 0x01	; 1
 
       // While that is going on, read in page contents
       bufPtr = buff;
       do *bufPtr++ = getpacket();
-    7cd4:	8b d0       	rcall	.+278    	; 0x7dec <getpacket>
-    7cd6:	89 93       	st	Y+, r24
+    7cd6:	6b d0       	rcall	.+214    	; 0x7dae <getpacket>
+    7cd8:	89 93       	st	Y+, r24
       while (--length);
-    7cd8:	0c 17       	cp	r16, r28
-    7cda:	e1 f7       	brne	.-8      	; 0x7cd4 <main+0xd4>
+    7cda:	0c 17       	cp	r16, r28
+    7cdc:	e1 f7       	brne	.-8      	; 0x7cd6 <main+0xd6>
 
       // If we are in NRWW section, page erase has to be delayed until now.
       // Todo: Take RAMPZ into account
       if (address >= NRWWSTART) __boot_page_erase_short((uint16_t)(void*)address);
-    7cdc:	f0 e0       	ldi	r31, 0x00	; 0
-    7cde:	ef 16       	cp	r14, r31
-    7ce0:	f0 e7       	ldi	r31, 0x70	; 112
-    7ce2:	ff 06       	cpc	r15, r31
-    7ce4:	18 f0       	brcs	.+6      	; 0x7cec <main+0xec>
-    7ce6:	f7 01       	movw	r30, r14
-    7ce8:	b7 be       	out	0x37, r11	; 55
-    7cea:	e8 95       	spm
+    7cde:	f0 e0       	ldi	r31, 0x00	; 0
+    7ce0:	ef 16       	cp	r14, r31
+    7ce2:	f0 e7       	ldi	r31, 0x70	; 112
+    7ce4:	ff 06       	cpc	r15, r31
+    7ce6:	18 f0       	brcs	.+6      	; 0x7cee <main+0xee>
+    7ce8:	f7 01       	movw	r30, r14
+    7cea:	b7 be       	out	0x37, r11	; 55
+    7cec:	e8 95       	spm
 
       // Read command terminator, start reply
       verifySpace();
-    7cec:	97 d0       	rcall	.+302    	; 0x7e1c <verifySpace>
+    7cee:	b6 d0       	rcall	.+364    	; 0x7e5c <verifySpace>
 
       // If only a partial page is to be programmed, the erase might not be complete.
       // So check that here
       boot_spm_busy_wait();
-    7cee:	07 b6       	in	r0, 0x37	; 55
-    7cf0:	00 fc       	sbrc	r0, 0
-    7cf2:	fd cf       	rjmp	.-6      	; 0x7cee <main+0xee>
-    7cf4:	a7 01       	movw	r20, r14
-    7cf6:	a0 e0       	ldi	r26, 0x00	; 0
-    7cf8:	b1 e0       	ldi	r27, 0x01	; 1
+    7cf0:	07 b6       	in	r0, 0x37	; 55
+    7cf2:	00 fc       	sbrc	r0, 0
+    7cf4:	fd cf       	rjmp	.-6      	; 0x7cf0 <main+0xf0>
+    7cf6:	a7 01       	movw	r20, r14
+    7cf8:	a0 e0       	ldi	r26, 0x00	; 0
+    7cfa:	b1 e0       	ldi	r27, 0x01	; 1
       bufPtr = buff;
       addrPtr = (uint16_t)(void*)address;
       ch = SPM_PAGESIZE / 2;
       do {
         uint16_t a;
         a = *bufPtr++;
-    7cfa:	2c 91       	ld	r18, X
-    7cfc:	30 e0       	ldi	r19, 0x00	; 0
+    7cfc:	2c 91       	ld	r18, X
+    7cfe:	30 e0       	ldi	r19, 0x00	; 0
         a |= (*bufPtr++) << 8;
-    7cfe:	11 96       	adiw	r26, 0x01	; 1
-    7d00:	8c 91       	ld	r24, X
-    7d02:	11 97       	sbiw	r26, 0x01	; 1
-    7d04:	90 e0       	ldi	r25, 0x00	; 0
-    7d06:	98 2f       	mov	r25, r24
-    7d08:	88 27       	eor	r24, r24
-    7d0a:	82 2b       	or	r24, r18
-    7d0c:	93 2b       	or	r25, r19
+    7d00:	11 96       	adiw	r26, 0x01	; 1
+    7d02:	8c 91       	ld	r24, X
+    7d04:	11 97       	sbiw	r26, 0x01	; 1
+    7d06:	90 e0       	ldi	r25, 0x00	; 0
+    7d08:	98 2f       	mov	r25, r24
+    7d0a:	88 27       	eor	r24, r24
+    7d0c:	82 2b       	or	r24, r18
+    7d0e:	93 2b       	or	r25, r19
 // TODO: Make this dynamic
 uint8_t xbeeAddress[8];
 #endif
 
 /* main program starts here */
 int main(void) {
-    7d0e:	12 96       	adiw	r26, 0x02	; 2
+    7d10:	12 96       	adiw	r26, 0x02	; 2
       ch = SPM_PAGESIZE / 2;
       do {
         uint16_t a;
         a = *bufPtr++;
         a |= (*bufPtr++) << 8;
         __boot_page_fill_short((uint16_t)(void*)addrPtr,a);
-    7d10:	fa 01       	movw	r30, r20
-    7d12:	0c 01       	movw	r0, r24
-    7d14:	87 be       	out	0x37, r8	; 55
-    7d16:	e8 95       	spm
-    7d18:	11 24       	eor	r1, r1
+    7d12:	fa 01       	movw	r30, r20
+    7d14:	0c 01       	movw	r0, r24
+    7d16:	87 be       	out	0x37, r8	; 55
+    7d18:	e8 95       	spm
+    7d1a:	11 24       	eor	r1, r1
         addrPtr += 2;
-    7d1a:	4e 5f       	subi	r20, 0xFE	; 254
-    7d1c:	5f 4f       	sbci	r21, 0xFF	; 255
+    7d1c:	4e 5f       	subi	r20, 0xFE	; 254
+    7d1e:	5f 4f       	sbci	r21, 0xFF	; 255
       } while (--ch);
-    7d1e:	f1 e0       	ldi	r31, 0x01	; 1
-    7d20:	a0 38       	cpi	r26, 0x80	; 128
-    7d22:	bf 07       	cpc	r27, r31
-    7d24:	51 f7       	brne	.-44     	; 0x7cfa <main+0xfa>
+    7d20:	f1 e0       	ldi	r31, 0x01	; 1
+    7d22:	a0 38       	cpi	r26, 0x80	; 128
+    7d24:	bf 07       	cpc	r27, r31
+    7d26:	51 f7       	brne	.-44     	; 0x7cfc <main+0xfc>
 
       // Write from programming buffer
       __boot_page_write_short((uint16_t)(void*)address);
-    7d26:	f7 01       	movw	r30, r14
-    7d28:	97 be       	out	0x37, r9	; 55
-    7d2a:	e8 95       	spm
+    7d28:	f7 01       	movw	r30, r14
+    7d2a:	97 be       	out	0x37, r9	; 55
+    7d2c:	e8 95       	spm
       boot_spm_busy_wait();
-    7d2c:	07 b6       	in	r0, 0x37	; 55
-    7d2e:	00 fc       	sbrc	r0, 0
-    7d30:	fd cf       	rjmp	.-6      	; 0x7d2c <main+0x12c>
+    7d2e:	07 b6       	in	r0, 0x37	; 55
+    7d30:	00 fc       	sbrc	r0, 0
+    7d32:	fd cf       	rjmp	.-6      	; 0x7d2e <main+0x12e>
 
 #if defined(RWWSRE)
       // Reenable read access to flash
       boot_rww_enable();
-    7d32:	a7 be       	out	0x37, r10	; 55
-    7d34:	e8 95       	spm
-    7d36:	21 c0       	rjmp	.+66     	; 0x7d7a <main+0x17a>
+    7d34:	a7 be       	out	0x37, r10	; 55
+    7d36:	e8 95       	spm
+    7d38:	23 c0       	rjmp	.+70     	; 0x7d80 <main+0x180>
 #endif
 
     }
     /* Read memory block mode, length is big endian.  */
     else if(ch == STK_READ_PAGE) {
-    7d38:	84 37       	cpi	r24, 0x74	; 116
-    7d3a:	b1 f4       	brne	.+44     	; 0x7d68 <main+0x168>
+    7d3a:	84 37       	cpi	r24, 0x74	; 116
+    7d3c:	b1 f4       	brne	.+44     	; 0x7d6a <main+0x16a>
       // READ PAGE - we only read flash
       getpacket();			/* getlen() */
-    7d3c:	57 d0       	rcall	.+174    	; 0x7dec <getpacket>
+    7d3e:	37 d0       	rcall	.+110    	; 0x7dae <getpacket>
       length = getpacket();
-    7d3e:	56 d0       	rcall	.+172    	; 0x7dec <getpacket>
-    7d40:	c8 2e       	mov	r12, r24
+    7d40:	36 d0       	rcall	.+108    	; 0x7dae <getpacket>
+    7d42:	c8 2e       	mov	r12, r24
       getpacket();
-    7d42:	54 d0       	rcall	.+168    	; 0x7dec <getpacket>
+    7d44:	34 d0       	rcall	.+104    	; 0x7dae <getpacket>
 
       verifySpace();
-    7d44:	6b d0       	rcall	.+214    	; 0x7e1c <verifySpace>
-    7d46:	f7 01       	movw	r30, r14
-    7d48:	dc 2c       	mov	r13, r12
+    7d46:	8a d0       	rcall	.+276    	; 0x7e5c <verifySpace>
+    7d48:	f7 01       	movw	r30, r14
+    7d4a:	dc 2c       	mov	r13, r12
         putpacket(result);
         address++;
       }
       while (--length);
 #else
       do putpacket(pgm_read_byte_near(address++));
-    7d4a:	8f 01       	movw	r16, r30
-    7d4c:	0f 5f       	subi	r16, 0xFF	; 255
-    7d4e:	1f 4f       	sbci	r17, 0xFF	; 255
-    7d50:	84 91       	lpm	r24, Z+
-    7d52:	1e d0       	rcall	.+60     	; 0x7d90 <putpacket>
+    7d4c:	8f 01       	movw	r16, r30
+    7d4e:	0f 5f       	subi	r16, 0xFF	; 255
+    7d50:	1f 4f       	sbci	r17, 0xFF	; 255
+    7d52:	84 91       	lpm	r24, Z+
+    7d54:	4f d0       	rcall	.+158    	; 0x7df4 <putpacket>
       while (--length);
-    7d54:	da 94       	dec	r13
-    7d56:	f8 01       	movw	r30, r16
-    7d58:	c1 f7       	brne	.-16     	; 0x7d4a <main+0x14a>
+    7d56:	da 94       	dec	r13
+    7d58:	f8 01       	movw	r30, r16
+    7d5a:	c1 f7       	brne	.-16     	; 0x7d4c <main+0x14c>
 // TODO: Make this dynamic
 uint8_t xbeeAddress[8];
 #endif
 
 /* main program starts here */
 int main(void) {
-    7d5a:	08 94       	sec
-    7d5c:	e1 1c       	adc	r14, r1
-    7d5e:	f1 1c       	adc	r15, r1
-    7d60:	ca 94       	dec	r12
-    7d62:	ec 0c       	add	r14, r12
-    7d64:	f1 1c       	adc	r15, r1
-    7d66:	09 c0       	rjmp	.+18     	; 0x7d7a <main+0x17a>
+    7d5c:	08 94       	sec
+    7d5e:	e1 1c       	adc	r14, r1
+    7d60:	f1 1c       	adc	r15, r1
+    7d62:	ca 94       	dec	r12
+    7d64:	ec 0c       	add	r14, r12
+    7d66:	f1 1c       	adc	r15, r1
+    7d68:	0b c0       	rjmp	.+22     	; 0x7d80 <main+0x180>
 #endif
 #endif
     }
 
     /* Get device signature bytes  */
     else if (ch == STK_LEAVE_PROGMODE) {
-    7d68:	81 35       	cpi	r24, 0x51	; 81
-    7d6a:	11 f4       	brne	.+4      	; 0x7d70 <main+0x170>
+    7d6a:	81 35       	cpi	r24, 0x51	; 81
+    7d6c:	11 f4       	brne	.+4      	; 0x7d72 <main+0x172>
       // Adaboot no-wait mod
       watchdogConfig(WATCHDOG_16MS);
-    7d6c:	88 e0       	ldi	r24, 0x08	; 8
-    7d6e:	03 c0       	rjmp	.+6      	; 0x7d76 <main+0x176>
+    7d6e:	88 e0       	ldi	r24, 0x08	; 8
+    7d70:	03 c0       	rjmp	.+6      	; 0x7d78 <main+0x178>
       verifySpace();
     }
     else if (ch == STK_ENTER_PROGMODE)
-    7d70:	80 35       	cpi	r24, 0x50	; 80
-    7d72:	11 f4       	brne	.+4      	; 0x7d78 <main+0x178>
+    7d72:	80 35       	cpi	r24, 0x50	; 80
+    7d74:	19 f4       	brne	.+6      	; 0x7d7c <main+0x17c>
     {
     	// Switch off watchdog timer when programming
     	watchdogConfig(WATCHDOG_OFF);
-    7d74:	80 e0       	ldi	r24, 0x00	; 0
-    7d76:	4c d0       	rcall	.+152    	; 0x7e10 <watchdogConfig>
+    7d76:	80 e0       	ldi	r24, 0x00	; 0
+    7d78:	6b d0       	rcall	.+214    	; 0x7e50 <watchdogConfig>
+    7d7a:	01 c0       	rjmp	.+2      	; 0x7d7e <main+0x17e>
+    	verifySpace();
+    }
     else {
 #ifdef XBEE_TEST
 		putpacket(ch);
+    7d7c:	3b d0       	rcall	.+118    	; 0x7df4 <putpacket>
 #endif
       // This covers the response to other commands
       verifySpace();
-    7d78:	51 d0       	rcall	.+162    	; 0x7e1c <verifySpace>
+    7d7e:	6e d0       	rcall	.+220    	; 0x7e5c <verifySpace>
     }
     putpacket(STK_OK);
-    7d7a:	80 e1       	ldi	r24, 0x10	; 16
-    7d7c:	09 d0       	rcall	.+18     	; 0x7d90 <putpacket>
-    7d7e:	87 cf       	rjmp	.-242    	; 0x7c8e <main+0x8e>
+    7d80:	80 e1       	ldi	r24, 0x10	; 16
+    7d82:	38 d0       	rcall	.+112    	; 0x7df4 <putpacket>
+    7d84:	85 cf       	rjmp	.-246    	; 0x7c90 <main+0x90>
 
-00007d80 <putch>:
+00007d86 <putch>:
   }
 }
 
 void putch(char ch) {
-    7d80:	98 2f       	mov	r25, r24
+    7d86:	98 2f       	mov	r25, r24
 #ifndef SOFT_UART
   while (!(UCSR0A & _BV(UDRE0)));
-    7d82:	80 91 c0 00 	lds	r24, 0x00C0
-    7d86:	85 ff       	sbrs	r24, 5
-    7d88:	fc cf       	rjmp	.-8      	; 0x7d82 <putch+0x2>
+    7d88:	80 91 c0 00 	lds	r24, 0x00C0
+    7d8c:	85 ff       	sbrs	r24, 5
+    7d8e:	fc cf       	rjmp	.-8      	; 0x7d88 <putch+0x2>
   UDR0 = ch;
-    7d8a:	90 93 c6 00 	sts	0x00C6, r25
+    7d90:	90 93 c6 00 	sts	0x00C6, r25
       [uartBit] "I" (UART_TX_BIT)
     :
       "r25"
   );
 #endif
 }
-    7d8e:	08 95       	ret
+    7d94:	08 95       	ret
 
-00007d90 <putpacket>:
-
-// Creates a data packet and sends it to Xbee
-void putpacket(char cha)
-{
-    7d90:	1f 93       	push	r17
-    7d92:	cf 93       	push	r28
-    7d94:	df 93       	push	r29
-    7d96:	18 2f       	mov	r17, r24
-#ifdef XBEE_SEND
-	uint8_t checksum = FRAME_SUM;
-   checksum += cha;
-   checksum = 0xFF - (checksum & 0xFF);
-  
-   putch(DELIMITER);
-    7d98:	8e e7       	ldi	r24, 0x7E	; 126
-    7d9a:	f2 df       	rcall	.-28     	; 0x7d80 <putch>
-   putch(LENGTH_UPPER);
-    7d9c:	80 e0       	ldi	r24, 0x00	; 0
-    7d9e:	f0 df       	rcall	.-32     	; 0x7d80 <putch>
-   putch(LENGTH_LOWER);
-    7da0:	8c e0       	ldi	r24, 0x0C	; 12
-    7da2:	ee df       	rcall	.-36     	; 0x7d80 <putch>
-   putch(FRAME_TYPE);
-    7da4:	80 e0       	ldi	r24, 0x00	; 0
-    7da6:	ec df       	rcall	.-40     	; 0x7d80 <putch>
-   putch(FRAME_ID);
-    7da8:	81 e0       	ldi	r24, 0x01	; 1
-    7daa:	ea df       	rcall	.-44     	; 0x7d80 <putch>
-    7dac:	c0 e0       	ldi	r28, 0x00	; 0
-    7dae:	d1 e0       	ldi	r29, 0x01	; 1
-
-   uint8_t i = 0;
-   for(; i < 8; i++)
-     putch(xbeeAddress[i]);
-    7db0:	89 91       	ld	r24, Y+
-    7db2:	e6 df       	rcall	.-52     	; 0x7d80 <putch>
-   putch(LENGTH_LOWER);
-   putch(FRAME_TYPE);
-   putch(FRAME_ID);
-
-   uint8_t i = 0;
-   for(; i < 8; i++)
-    7db4:	81 e0       	ldi	r24, 0x01	; 1
-    7db6:	c8 30       	cpi	r28, 0x08	; 8
-    7db8:	d8 07       	cpc	r29, r24
-    7dba:	d1 f7       	brne	.-12     	; 0x7db0 <putpacket+0x20>
-     putch(xbeeAddress[i]);
-   
-   putch(OPTIONS);
-    7dbc:	80 e0       	ldi	r24, 0x00	; 0
-    7dbe:	e0 df       	rcall	.-64     	; 0x7d80 <putch>
-#endif
-
-   putch(cha);
-    7dc0:	81 2f       	mov	r24, r17
-    7dc2:	de df       	rcall	.-68     	; 0x7d80 <putch>
-// Creates a data packet and sends it to Xbee
-void putpacket(char cha)
-{
-#ifdef XBEE_SEND
-	uint8_t checksum = FRAME_SUM;
-   checksum += cha;
-    7dc4:	18 53       	subi	r17, 0x38	; 56
-#endif
-
-   putch(cha);
-
-#ifdef XBEE
-   putch(checksum);
-    7dc6:	81 2f       	mov	r24, r17
-    7dc8:	80 95       	com	r24
-    7dca:	da df       	rcall	.-76     	; 0x7d80 <putch>
-#endif
-}
-    7dcc:	df 91       	pop	r29
-    7dce:	cf 91       	pop	r28
-    7dd0:	1f 91       	pop	r17
-    7dd2:	08 95       	ret
-
-00007dd4 <getch>:
+00007d96 <getch>:
       [uartBit] "I" (UART_RX_BIT)
     :
       "r25"
 );
 #else
   while(!(UCSR0A & _BV(RXC0)))
-    7dd4:	80 91 c0 00 	lds	r24, 0x00C0
-    7dd8:	87 ff       	sbrs	r24, 7
-    7dda:	fc cf       	rjmp	.-8      	; 0x7dd4 <getch>
+    7d96:	80 91 c0 00 	lds	r24, 0x00C0
+    7d9a:	87 ff       	sbrs	r24, 7
+    7d9c:	fc cf       	rjmp	.-8      	; 0x7d96 <getch>
     ;
   if (!(UCSR0A & _BV(FE0))) {
-    7ddc:	80 91 c0 00 	lds	r24, 0x00C0
-    7de0:	84 fd       	sbrc	r24, 4
-    7de2:	01 c0       	rjmp	.+2      	; 0x7de6 <getch+0x12>
+    7d9e:	80 91 c0 00 	lds	r24, 0x00C0
+    7da2:	84 fd       	sbrc	r24, 4
+    7da4:	01 c0       	rjmp	.+2      	; 0x7da8 <getch+0x12>
 }
 #endif
 
 // Watchdog functions. These are only safe with interrupts turned off.
 void watchdogReset() {
   __asm__ __volatile__ (
-    7de4:	a8 95       	wdr
+    7da6:	a8 95       	wdr
        * don't care that an invalid char is returned...)
        */
     watchdogReset();
   }
   
   ch = UDR0;
-    7de6:	80 91 c6 00 	lds	r24, 0x00C6
+    7da8:	80 91 c6 00 	lds	r24, 0x00C6
   LED_PIN |= _BV(LED);
 #endif
 #endif
 
   return ch;
 }
-    7dea:	08 95       	ret
+    7dac:	08 95       	ret
 
-00007dec <getpacket>:
-#endif
+00007dae <getpacket>:
 }
+#endif
 
 // A function to handle receiving XBee packets
 uint8_t getpacket(void)
 {
-    7dec:	1f 93       	push	r17
+    7dae:	1f 93       	push	r17
   uint8_t ch =  getch();
-    7dee:	f2 df       	rcall	.-28     	; 0x7dd4 <getch>
-    7df0:	18 2f       	mov	r17, r24
+    7db0:	f2 df       	rcall	.-28     	; 0x7d96 <getch>
 
 #ifdef XBEE_RECV
   if (ch == 126)
-    7df2:	8e 37       	cpi	r24, 0x7E	; 126
-    7df4:	51 f4       	brne	.+20     	; 0x7e0a <getpacket+0x1e>
+    7db2:	8e 37       	cpi	r24, 0x7E	; 126
+    7db4:	11 f0       	breq	.+4      	; 0x7dba <getpacket+0xc>
+    7db6:	10 e0       	ldi	r17, 0x00	; 0
+    7db8:	0a c0       	rjmp	.+20     	; 0x7dce <getpacket+0x20>
   {
     getch();  // drop the higher byte of the length
-    7df6:	ee df       	rcall	.-36     	; 0x7dd4 <getch>
+    7dba:	ed df       	rcall	.-38     	; 0x7d96 <getch>
     uint8_t length = getch();
-    7df8:	ed df       	rcall	.-38     	; 0x7dd4 <getch>
-    7dfa:	18 2f       	mov	r17, r24
+    7dbc:	ec df       	rcall	.-40     	; 0x7d96 <getch>
+    7dbe:	18 2f       	mov	r17, r24
     do
     {
       getch();
-    7dfc:	eb df       	rcall	.-42     	; 0x7dd4 <getch>
+    7dc0:	ea df       	rcall	.-44     	; 0x7d96 <getch>
     }
     while (--length != 1);
-    7dfe:	11 50       	subi	r17, 0x01	; 1
-    7e00:	11 30       	cpi	r17, 0x01	; 1
-    7e02:	e1 f7       	brne	.-8      	; 0x7dfc <getpacket+0x10>
+    7dc2:	11 50       	subi	r17, 0x01	; 1
+    7dc4:	11 30       	cpi	r17, 0x01	; 1
+    7dc6:	e1 f7       	brne	.-8      	; 0x7dc0 <getpacket+0x12>
 
     ch = getch();
-    7e04:	e7 df       	rcall	.-50     	; 0x7dd4 <getch>
-    7e06:	18 2f       	mov	r17, r24
+    7dc8:	e6 df       	rcall	.-52     	; 0x7d96 <getch>
+    7dca:	18 2f       	mov	r17, r24
     getch();
-    7e08:	e5 df       	rcall	.-54     	; 0x7dd4 <getch>
-    return ch;
+    7dcc:	e4 df       	rcall	.-56     	; 0x7d96 <getch>
   }
+  else return 0x00;
 #endif
 
   return ch;
 }
-    7e0a:	81 2f       	mov	r24, r17
-    7e0c:	1f 91       	pop	r17
-    7e0e:	08 95       	ret
+    7dce:	81 2f       	mov	r24, r17
+    7dd0:	1f 91       	pop	r17
+    7dd2:	08 95       	ret
 
-00007e10 <watchdogConfig>:
+00007dd4 <sendFailure>:
+}
+
+#ifdef XBEE_SEND
+// A function to ensure delivery status
+uint8_t sendFailure()
+{
+    7dd4:	1f 93       	push	r17
+	uint8_t ch = getch();
+    7dd6:	df df       	rcall	.-66     	; 0x7d96 <getch>
+	getch();  // drop the higher byte of the length
+    7dd8:	de df       	rcall	.-68     	; 0x7d96 <getch>
+	uint8_t length = getch();
+    7dda:	dd df       	rcall	.-70     	; 0x7d96 <getch>
+    7ddc:	18 2f       	mov	r17, r24
+	do
+	{
+		getch();
+    7dde:	db df       	rcall	.-74     	; 0x7d96 <getch>
+	} while (--length != 2);
+    7de0:	11 50       	subi	r17, 0x01	; 1
+    7de2:	12 30       	cpi	r17, 0x02	; 2
+    7de4:	e1 f7       	brne	.-8      	; 0x7dde <sendFailure+0xa>
+
+	ch = getch();
+    7de6:	d7 df       	rcall	.-82     	; 0x7d96 <getch>
+    7de8:	18 2f       	mov	r17, r24
+	getch();
+    7dea:	d5 df       	rcall	.-86     	; 0x7d96 <getch>
+	getch();
+    7dec:	d4 df       	rcall	.-88     	; 0x7d96 <getch>
+
+	return ch;
+}
+    7dee:	81 2f       	mov	r24, r17
+    7df0:	1f 91       	pop	r17
+    7df2:	08 95       	ret
+
+00007df4 <putpacket>:
+#endif
+}
+
+// Creates a data packet and sends it to Xbee
+void putpacket(char cha)
+{
+    7df4:	1f 93       	push	r17
+    7df6:	cf 93       	push	r28
+    7df8:	df 93       	push	r29
+    7dfa:	18 2f       	mov	r17, r24
+#ifdef XBEE_SEND
+	uint8_t checksum = FRAME_SUM;
+	checksum += cha;
+	checksum = 0xFF - (checksum & 0xFF);
+  
+	putch(DELIMITER);
+    7dfc:	8e e7       	ldi	r24, 0x7E	; 126
+    7dfe:	c3 df       	rcall	.-122    	; 0x7d86 <putch>
+	putch(LENGTH_UPPER);
+    7e00:	80 e0       	ldi	r24, 0x00	; 0
+    7e02:	c1 df       	rcall	.-126    	; 0x7d86 <putch>
+	putch(LENGTH_LOWER);
+    7e04:	8f e0       	ldi	r24, 0x0F	; 15
+    7e06:	bf df       	rcall	.-130    	; 0x7d86 <putch>
+	putch(FRAME_TYPE);
+    7e08:	80 e1       	ldi	r24, 0x10	; 16
+    7e0a:	bd df       	rcall	.-134    	; 0x7d86 <putch>
+	putch(FRAME_ID);
+    7e0c:	81 e0       	ldi	r24, 0x01	; 1
+    7e0e:	bb df       	rcall	.-138    	; 0x7d86 <putch>
+    7e10:	c0 e0       	ldi	r28, 0x00	; 0
+    7e12:	d1 e0       	ldi	r29, 0x01	; 1
+
+	uint8_t i = 0;
+	for(; i < 8; i++)
+		putch(xbeeAddress[i]);
+    7e14:	89 91       	ld	r24, Y+
+    7e16:	b7 df       	rcall	.-146    	; 0x7d86 <putch>
+	putch(LENGTH_LOWER);
+	putch(FRAME_TYPE);
+	putch(FRAME_ID);
+
+	uint8_t i = 0;
+	for(; i < 8; i++)
+    7e18:	81 e0       	ldi	r24, 0x01	; 1
+    7e1a:	c8 30       	cpi	r28, 0x08	; 8
+    7e1c:	d8 07       	cpc	r29, r24
+    7e1e:	d1 f7       	brne	.-12     	; 0x7e14 <putpacket+0x20>
+		putch(xbeeAddress[i]);
+   
+	putch(XBEE_ADDR_16H);
+    7e20:	8f ef       	ldi	r24, 0xFF	; 255
+    7e22:	b1 df       	rcall	.-158    	; 0x7d86 <putch>
+	putch(XBEE_ADDR_16L);
+    7e24:	8e ef       	ldi	r24, 0xFE	; 254
+    7e26:	af df       	rcall	.-162    	; 0x7d86 <putch>
+	putch(BROADCAST_RADIUS);
+    7e28:	80 e0       	ldi	r24, 0x00	; 0
+    7e2a:	ad df       	rcall	.-166    	; 0x7d86 <putch>
+	putch(OPTIONS);
+    7e2c:	80 e0       	ldi	r24, 0x00	; 0
+    7e2e:	ab df       	rcall	.-170    	; 0x7d86 <putch>
+#endif
+
+   putch(cha);
+    7e30:	81 2f       	mov	r24, r17
+    7e32:	a9 df       	rcall	.-174    	; 0x7d86 <putch>
+// Creates a data packet and sends it to Xbee
+void putpacket(char cha)
+{
+#ifdef XBEE_SEND
+	uint8_t checksum = FRAME_SUM;
+	checksum += cha;
+    7e34:	81 2f       	mov	r24, r17
+    7e36:	8b 50       	subi	r24, 0x0B	; 11
+#endif
+
+   putch(cha);
+
+#ifdef XBEE_SEND
+   putch(checksum);
+    7e38:	80 95       	com	r24
+    7e3a:	a5 df       	rcall	.-182    	; 0x7d86 <putch>
+    7e3c:	02 c0       	rjmp	.+4      	; 0x7e42 <putpacket+0x4e>
+
+   // Until the acknowledgement packet results in success, keep 
+   // resending the packet
+   while (sendFailure()) putpacket(cha);
+    7e3e:	81 2f       	mov	r24, r17
+    7e40:	d9 df       	rcall	.-78     	; 0x7df4 <putpacket>
+    7e42:	c8 df       	rcall	.-112    	; 0x7dd4 <sendFailure>
+    7e44:	88 23       	and	r24, r24
+    7e46:	d9 f7       	brne	.-10     	; 0x7e3e <putpacket+0x4a>
+#endif
+}
+    7e48:	df 91       	pop	r29
+    7e4a:	cf 91       	pop	r28
+    7e4c:	1f 91       	pop	r17
+    7e4e:	08 95       	ret
+
+00007e50 <watchdogConfig>:
     "wdr\n"
   );
 }
 
 void watchdogConfig(uint8_t x) {
   WDTCSR = _BV(WDCE) | _BV(WDE);
-    7e10:	e0 e6       	ldi	r30, 0x60	; 96
-    7e12:	f0 e0       	ldi	r31, 0x00	; 0
-    7e14:	98 e1       	ldi	r25, 0x18	; 24
-    7e16:	90 83       	st	Z, r25
+    7e50:	e0 e6       	ldi	r30, 0x60	; 96
+    7e52:	f0 e0       	ldi	r31, 0x00	; 0
+    7e54:	98 e1       	ldi	r25, 0x18	; 24
+    7e56:	90 83       	st	Z, r25
   WDTCSR = x;
-    7e18:	80 83       	st	Z, r24
+    7e58:	80 83       	st	Z, r24
 }
-    7e1a:	08 95       	ret
+    7e5a:	08 95       	ret
 
-00007e1c <verifySpace>:
+00007e5c <verifySpace>:
   do getpacket(); while (--count);
   verifySpace();
 }
 
 void verifySpace() {
   if (getpacket() != CRC_EOP) {
-    7e1c:	e7 df       	rcall	.-50     	; 0x7dec <getpacket>
-    7e1e:	80 32       	cpi	r24, 0x20	; 32
-    7e20:	19 f0       	breq	.+6      	; 0x7e28 <verifySpace+0xc>
+    7e5c:	a8 df       	rcall	.-176    	; 0x7dae <getpacket>
+    7e5e:	80 32       	cpi	r24, 0x20	; 32
+    7e60:	19 f0       	breq	.+6      	; 0x7e68 <verifySpace+0xc>
     watchdogConfig(WATCHDOG_16MS);    // shorten WD timeout
-    7e22:	88 e0       	ldi	r24, 0x08	; 8
-    7e24:	f5 df       	rcall	.-22     	; 0x7e10 <watchdogConfig>
-    7e26:	ff cf       	rjmp	.-2      	; 0x7e26 <verifySpace+0xa>
+    7e62:	88 e0       	ldi	r24, 0x08	; 8
+    7e64:	f5 df       	rcall	.-22     	; 0x7e50 <watchdogConfig>
+    7e66:	ff cf       	rjmp	.-2      	; 0x7e66 <verifySpace+0xa>
     while (1)			      // and busy-loop so that WD causes
       ;				      //  a reset and app start.
   }
   putpacket(STK_INSYNC);
-    7e28:	84 e1       	ldi	r24, 0x14	; 20
+    7e68:	84 e1       	ldi	r24, 0x14	; 20
 }
-    7e2a:	b2 cf       	rjmp	.-156    	; 0x7d90 <putpacket>
+    7e6a:	c4 cf       	rjmp	.-120    	; 0x7df4 <putpacket>
 
-00007e2c <appStart>:
+00007e6c <appStart>:
   WDTCSR = _BV(WDCE) | _BV(WDE);
   WDTCSR = x;
 }
 
 void appStart() {
   watchdogConfig(WATCHDOG_OFF);
-    7e2c:	80 e0       	ldi	r24, 0x00	; 0
-    7e2e:	f0 df       	rcall	.-32     	; 0x7e10 <watchdogConfig>
+    7e6c:	80 e0       	ldi	r24, 0x00	; 0
+    7e6e:	f0 df       	rcall	.-32     	; 0x7e50 <watchdogConfig>
   __asm__ __volatile__ (
-    7e30:	ee 27       	eor	r30, r30
-    7e32:	ff 27       	eor	r31, r31
-    7e34:	09 94       	ijmp
+    7e70:	ee 27       	eor	r30, r30
+    7e72:	ff 27       	eor	r31, r31
+    7e74:	09 94       	ijmp

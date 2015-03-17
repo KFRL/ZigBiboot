@@ -5,3 +5,5 @@ C:\Users\Inshal\Documents\GitHub\Programmer\Programmer\obj\Debug\Programmer.exe
 C:\Users\Inshal\Documents\GitHub\Programmer\Programmer\obj\Debug\Programmer.pdb
 C:\Users\Inshal\Documents\GitHub\Programmer\Programmer\bin\Debug\Blink.hex
 C:\Users\Inshal\Documents\GitHub\Programmer\Programmer\bin\Debug\Blank.hex
+C:\Users\Inshal\Documents\GitHub\Programmer - ZigBee\Programmer\obj\Debug\Programmer.exe
+C:\Users\Inshal\Documents\GitHub\Programmer - ZigBee\Programmer\obj\Debug\Programmer.pdb
