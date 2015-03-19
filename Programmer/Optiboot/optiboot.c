@@ -263,7 +263,7 @@ void appStart() __attribute__ ((naked));
 #define XBEE
 #define XBEE_SEND
 #define XBEE_RECV
-#define XBEE_TEST
+//#define XBEE_TEST
 
 #ifdef XBEE_TEST
 #ifndef XBEE
@@ -286,7 +286,7 @@ void appStart() __attribute__ ((naked));
 #define FRAME_ID 1        // decimal for 0x01
 #define BROADCAST_RADIUS 0// decimal for 0x00
 #define OPTIONS 0         // decimal for 0x00, default options
-#define FRAME_SUM 245     // decimal for 0xC8, sum of all the bytes before the payload
+#define FRAME_SUM 245     // decimal for 0xF5, sum of all the bytes before the payload
 #define XBEE_ADDR_16H 255 // decimal for 0xFF
 #define XBEE_ADDR_16L 254 // decimal for 0xFE
 
@@ -373,7 +373,7 @@ int main(void) {
   flash_led(LED_START_FLASHES * 2);
 #endif
 
-  putch(0x04);
+  putpacket(0x04);
 
   /* Forever loop */
   for (;;) {
@@ -503,7 +503,7 @@ int main(void) {
     /* Get device signature bytes  */
     else if (ch == STK_LEAVE_PROGMODE) {
       // Adaboot no-wait mod
-      watchdogConfig(WATCHDOG_16MS);
+	  watchdogConfig(WATCHDOG_64MS);
       verifySpace();
     }
     else if (ch == STK_ENTER_PROGMODE)
@@ -584,7 +584,7 @@ void putpacket(char cha)
 
    // Until the acknowledgement packet results in success, keep 
    // resending the packet
-   while (sendFailure()) putpacket(cha);
+   while (sendFailure() > 0) putpacket(cha);
 #endif
 }
 

@@ -12,9 +12,9 @@ namespace TestProgrammer
     class Program
     {
         static SerialPort ser;
-        static string path = "COM17";
+        static string path = "COM18";
         static bool xbeePackets = true;
-        
+
         // Declaration STK of constants
         #region stk500
 
@@ -59,8 +59,9 @@ namespace TestProgrammer
         const int STK_READ_OSCCAL_EXT = 0x78; // 'x'
 
         #endregion
-        
+
         // XBee Constants
+        #region XBee
         const byte DELIMITER = 126;     // decimal for 0x7E
         const byte LENGTH_UPPER = 0;    // decimal for 0x00
         const byte LENGTH_LOWER = 15;   // decimal for 0x0F
@@ -69,10 +70,15 @@ namespace TestProgrammer
         const byte OPTIONS = 0;         // decimal for 0x00, default options
         const byte FRAME_SUM = 123;     // decimal for 0x7B, sum of all the bytes before the payload
         const byte BROADCAST_RADIUS = 0;// decimal for 0x00
-        
+
+        const byte STATUS_PACKETSIZE = 11;
+        const byte SEND_PACKETSIZE = 19;
+
         const byte DELIVERY_STATUS_POS = 8;
-        
-        static byte[] FRAME_HEADER = new byte[]{DELIMITER, LENGTH_UPPER, LENGTH_LOWER, FRAME_TYPE, FRAME_ID};
+        const byte DATA_POS = 17;
+        #endregion
+
+        static byte[] frameHeader = new byte[] { DELIMITER, LENGTH_UPPER, LENGTH_LOWER, FRAME_TYPE, FRAME_ID };
         static byte[] xBeeAddress64 = new byte[] { 0x00, 0x13, 0xA2, 0x00, 0x40, 0xB1, 0x82, 0x45 };
         static byte[] xBeeAddress16 = new byte[] { 0xFF, 0xFE };
 
@@ -81,41 +87,39 @@ namespace TestProgrammer
             // Initialize serial port on which the Arduino is
             ser = new SerialPort(path, 115200, Parity.None, 8, StopBits.One);
 
-            //List<byte[]> programData = new List<byte[]>();
-            //List<byte[]> programAddresses = new List<byte[]>();
+            // Open the port for transmission
+            ser.Open();
 
-            //readHexFile("Blank.hex", ref programData, ref programAddresses);
-            //programBoard(programAddresses, programData, false);
+            List<byte[]> programData = new List<byte[]>();
+            List<byte[]> programAddresses = new List<byte[]>();
 
-            //// A buffer to hold data being sent
-            //byte[] buff;
-
-            //// Open the port for transmission
-            //ser.Open();
+            readHexFile("Blank.hex", ref programData, ref programAddresses);
+            programBoard(programAddresses, programData);
 
             //resetBoard();
             //waitForBootloader();
             //enterProgrammingMode();
 
-            //// Code segment for GET_SYNC
-            //buff = new byte[] { STK_GET_SYNC, CRC_EOP };
+            //// A buffer to hold data being sent
+            //byte[] buff = new byte[] { STK_GET_SYNC, CRC_EOP };
 
             //char ch = Console.ReadKey(true).KeyChar;
 
             //while (ch != 0x0d)
             //{
-            //    writeToPort(new byte[] { (byte)ch, CRC_EOP }, true);
+            //    writeToPort(buff, true);
             //    getResponse();
             //    ch = Console.ReadKey(true).KeyChar;
             //}
 
             //leaveProgrammingMode();
 
-            while (Console.ReadKey(true).KeyChar == 0x0d)
-            {
-                resetBoard();
-            }
+            //while (Console.ReadKey(true).KeyChar == 0x0d)
+            //{
+            //    resetBoard();
+            //}
 
+            if (ser.IsOpen) ser.Close();
             Console.WriteLine("Done.");
             Console.ReadKey(true);
         }
@@ -128,7 +132,12 @@ namespace TestProgrammer
         /// <returns>Returns a bool which indicates if the datapacket was received.</returns>
         static bool waitForBootloader(bool print = true)
         {
-            return (getResponse(print)[0] == 0x04);
+            byte[] data = getResponse(print).ToArray();
+
+            if (xbeePackets)
+                return (data[data.Length - 2] == 0x04);
+            else
+                return (data[0] == 0x04);
         }
 
         /// <summary>
@@ -139,9 +148,11 @@ namespace TestProgrammer
         {
             // Reset the board
             if (print)
+            {
                 Console.WriteLine("Resetting the board...\n");
-            ser.DtrEnable = !ser.DtrEnable;     // Toggle DTR
-            ser.DtrEnable = !ser.DtrEnable;     // Toggle DTR
+            }
+            //ser.DtrEnable = !ser.DtrEnable;     // Toggle DTR
+            //ser.DtrEnable = !ser.DtrEnable;     // Toggle DTR
         }
 
         /// <summary>
@@ -154,7 +165,7 @@ namespace TestProgrammer
             byte[] buff = new byte[] { STK_ENTER_PROGMODE, CRC_EOP };
 
             writeToPort(buff, xbeePackets);
-            
+
             getResponse(print);
         }
 
@@ -180,13 +191,31 @@ namespace TestProgrammer
         /// <returns>Returns whether the packet was dropped or corrupted.</returns>
         static bool sendFailure(bool print = true)
         {
-            int result = getResponse(print).ToArray()[DELIVERY_STATUS_POS];
-            switch(result)
+            byte[] buff = new byte[STATUS_PACKETSIZE];
+
+            // Wait for data
+            while (ser.BytesToRead < STATUS_PACKETSIZE) ;
+
+            ser.Read(buff, 0, 11);
+
+            if (print)
+            {
+                Console.Write("Recv:");
+                foreach (byte b in buff)
+                {
+                    Console.Write(" [{0:X2}] ", b);
+                }
+                Console.WriteLine();
+            }
+
+            switch (buff[DELIVERY_STATUS_POS])
             {
                 case 0x24:
                     throw new Exception("Input XBee address not found.");
                 default:
-                    return result != 0;
+                    bool failure = buff[DELIVERY_STATUS_POS] != 0;
+                    if (failure && print) Console.WriteLine("Transmission failed. Retrying");
+                    return failure;
             }
         }
 
@@ -199,56 +228,41 @@ namespace TestProgrammer
         /// <param name="print">Optionally prints data to console. Default is false.</param>
         static void writeToPort(byte[] data, bool xbee = false, bool print = true)
         {
+            bool portClosed = !ser.IsOpen;
+
+            if (portClosed) ser.Open();
+
             if (xbee)
             {
                 int idx = 0;
                 while (idx < data.Length)
                 {
-                    // Calculate the checksum for the packet
-                    byte checksum = (byte)(0xFF - ((FRAME_SUM + data[idx]) & 0xFF));
-
-                    // Write the entire frame header at once
-                    ser.Write(FRAME_HEADER, 0, FRAME_HEADER.Length);
-                    // Write the 64-bit XBee address
-                    ser.Write(xBeeAddress64, 0, xBeeAddress64.Length);
-                    // Write the 16-bit XBee address
-                    ser.Write(xBeeAddress16, 0, xBeeAddress16.Length);
-                    // Write the options byte
-                    ser.Write(new byte[] { BROADCAST_RADIUS }, 0, 1);
-                    // Write the options byte
-                    ser.Write(new byte[] { OPTIONS }, 0, 1);
-                    // Write a single byte of data
-                    ser.Write(data, idx, 1);
-                    // Finish it off with the checksum
-                    ser.Write(new byte[] { checksum }, 0, 1);
-
-                    if (print)
+                    do
                     {
-                        Console.Write("Send:");
-                        foreach (byte b in FRAME_HEADER)
-                        {
-                            Console.Write(" [{0:X2}] ", b);
-                        }
-                        foreach (byte b in xBeeAddress16)
-                        {
-                            Console.Write(" [{0:X2}] ", b);
-                        }
-                        foreach (byte b in xBeeAddress64)
-                        {
-                            Console.Write(" [{0:X2}] ", b);
-                        }
+                        // Create packet for the a byte
+                        byte[] packet = createPacket(data[idx]);
 
-                        Console.Write(" [{0:X2}] ", BROADCAST_RADIUS);
-                        Console.Write(" [{0:X2}] ", OPTIONS);
-                        Console.Write(" [{0:X2}] ", data[idx]);
-                        Console.WriteLine(" [{0:X2}] ", checksum);
+                        ser.Write(packet, 0, packet.Length);
+
+                        if (print)
+                        {
+                            Console.Write("Send:");
+
+                            foreach (byte b in packet)
+                            {
+                                Console.Write(" [{0:X2}]", b);
+                            }
+
+                            //Console.Write(" [{0:X2}]", packet[packet.Length - 2]);
+
+                            Console.WriteLine();
+                        }
                     }
+                    // Resend data in case of failure
+                    while (sendFailure(false));
 
                     idx++;
                 }
-
-                // Resend data in case of failure
-                while (sendFailure()) writeToPort(data, xbee, print);
             }
             else
             {
@@ -261,6 +275,47 @@ namespace TestProgrammer
                     Console.WriteLine();
                 }
             }
+
+            if (portClosed) ser.Close();
+        }
+
+        /// <summary>
+        /// Create an XBee packet for the given byte.
+        /// </summary>
+        /// <param name="data">Byte of data to be transferred</param>
+        /// <returns>XBee packet to be transferred.</returns>
+        static byte[] createPacket(byte data)
+        {
+            byte[] packet = new byte[SEND_PACKETSIZE];
+            int idx = 0;
+            // Calculate the checksum for the packet
+            byte checksum = (byte)(0xFF - ((FRAME_SUM + data) & 0xFF));
+
+            // The frame header
+            foreach (byte b in frameHeader)
+            {
+                packet[idx++] = b;
+            }
+            // The 64-bit XBee address
+            foreach (byte b in xBeeAddress64)
+            {
+                packet[idx++] = b;
+            }
+            // The 16-bit XBee address
+            foreach (byte b in xBeeAddress16)
+            {
+                packet[idx++] = b;
+            }
+            // The options byte
+            packet[idx++] = BROADCAST_RADIUS;
+            // The options byte
+            packet[idx++] = OPTIONS;
+            // Single byte of data
+            packet[idx++] = data;
+            // The checksum
+            packet[idx++] = checksum;
+
+            return packet;
         }
 
         /// <summary>
@@ -270,15 +325,16 @@ namespace TestProgrammer
         /// <returns>Returns a list of bytes read from the port</returns>
         static List<byte> getResponse(bool print = true)
         {
-            // TODO: Modify function to ignore 0x10 unless it is the end of the packet
-
             List<byte> response = new List<byte>(); // A list that holds all the received data
             byte rByte = 0xFF;          // Holds a byte of data recieved from the board
             long timer = (!xbeePackets) ? 2000000 : 5000000;       // Timer to stop app if nothing is received
- 
+            bool portClosed = !ser.IsOpen;
+
+            if (portClosed) ser.Open();
+
             while (ser.BytesToRead == 0 && timer > 0)   // Wait for data to be available
                 timer--;    // Decrement timer
-            
+
             if (timer == 0)
             {
                 Console.WriteLine("Timeout error. Press any key to exit...");
@@ -289,7 +345,7 @@ namespace TestProgrammer
             // Makes sure there's no new data being written to the buffer
             int previousBytes = ser.BytesToRead;
 
-            do 
+            do
             {
                 previousBytes = ser.BytesToRead;
                 Thread.Sleep(50);
@@ -308,6 +364,8 @@ namespace TestProgrammer
 
             Console.WriteLine();
 
+            if (portClosed) ser.Close();
+
             return response;
         }
 
@@ -321,7 +379,9 @@ namespace TestProgrammer
         static void programBoard(List<byte[]> addresses, List<byte[]> program, bool print = true)
         {
             // Open the port for transmission
-            ser.Open();
+            bool portClosed = !ser.IsOpen;
+
+            if (portClosed) ser.Open();
 
             // Reset the board
             resetBoard(print);
@@ -330,31 +390,17 @@ namespace TestProgrammer
 
             // Program the flash memory
             for (int idx = 0; idx < addresses.Count; idx++)
-			{
-			    // Change the current address to write data to
-                writeToPort(addresses[idx], xbeePackets);
+            {
+                // Change the current address to write data to
+                writeToPort(addresses[idx], xbeePackets, print);
 
-                if (print)
-                {
-                    Console.Write("Send:");
-                    for (int i = 0; i < addresses[idx].Length; i++)
-                        Console.Write(" [{0:X2}]", addresses[idx][i]);
-                    Console.WriteLine();
-                }
-
-                getResponse();
+                getResponse(print);
 
                 // Write the data to the flash memory
-                writeToPort(program[idx], xbeePackets);
-                if (print)
-                {
-                    Console.Write("Send:");
-                    for (int i = 0; i < program[idx].Length; i++)
-                        Console.Write(" [{0:X2}]", program[idx][i]);
-                    Console.WriteLine();
-                }
-                getResponse();
-			}
+                writeToPort(program[idx], xbeePackets, print);
+
+                getResponse(print);
+            }
 
             // Read program from the flash memory 
 
@@ -387,7 +433,7 @@ namespace TestProgrammer
             leaveProgrammingMode(print);
 
             // End communication
-            ser.Close();
+            if (portClosed) ser.Close();
         }
 
         /// <summary>
@@ -423,7 +469,7 @@ namespace TestProgrammer
                 // If the program gets to this part, the then the current line has valid data
                 // Declare a byte list for storing retrieved data
                 List<byte> data = new List<byte>();
-                
+
                 // Declare a byte list for storing the retrieved address
                 List<byte> address = new List<byte>();
 
@@ -458,7 +504,7 @@ namespace TestProgrammer
                     {
                         data.Add(byte.Parse(line.Substring(i + i + 8, 2), NumberStyles.HexNumber));
                     }
-                    
+
                     line = reader.ReadLine().TrimStart(':');
 
                     // Check the TT field to see if this is the last line of the file
