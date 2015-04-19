@@ -59,7 +59,6 @@
     <None Include="Optiboot\omake" />
     <None Include="Optiboot\omake.bat" />
     <None Include="Optiboot\optiboot_atmega328.hex" />
-    <None Include="Optiboot\upload.bat" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Optiboot\boot.h" />

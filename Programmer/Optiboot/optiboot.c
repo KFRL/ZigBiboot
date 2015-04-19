@@ -219,7 +219,9 @@ void putch(char);
 void putpacket(char);
 uint8_t sendFailure();
 uint8_t getch(void);
+void getNpacket(uint8_t);
 uint8_t getpacket(void);
+void ledhalt();
 static inline void getNch(uint8_t); /* "static inline" is a compiler hint to reduce code size */
 void verifySpace();
 static inline void flash_led(uint8_t);
@@ -251,29 +253,23 @@ void appStart() __attribute__ ((naked));
 #define NRWWSTART (0x1800)
 #endif
 
+#define BUFFERSTART (0x300)
+
 /* C zero initialises all global variables. However, that requires */
 /* These definitions are NOT zero initialised, but that doesn't matter */
 /* This allows us to drop the zero init code, saving us memory */
-#define buff    ((uint8_t*)(RAMSTART))
+#define buff    ((uint8_t*)(BUFFERSTART))
 #ifdef VIRTUAL_BOOT_PARTITION
 #define rstVect (*(uint16_t*)(RAMSTART+SPM_PAGESIZE*2+4))
 #define wdtVect (*(uint16_t*)(RAMSTART+SPM_PAGESIZE*2+6))
 #endif
 
 #define XBEE
-#define XBEE_SEND
-#define XBEE_RECV
 //#define XBEE_TEST
 
 #ifdef XBEE_TEST
 #ifndef XBEE
 #define XBEE
-#endif
-#ifndef XBEE_SEND
-#define XBEE_SEND
-#endif
-#ifndef XBEE_RECV
-#define XBEE_RECV
 #endif
 #endif
 
@@ -290,6 +286,8 @@ void appStart() __attribute__ ((naked));
 #define XBEE_ADDR_16H 255 // decimal for 0xFF
 #define XBEE_ADDR_16L 254 // decimal for 0xFE
 
+#define RECV_FRAMEID 144  // decimal for 0x90
+#define STATUS_FRAMEID 139// decimal for 0x8B
 
 // TODO: Make this dynamic
 uint8_t xbeeAddress[8];
@@ -358,7 +356,13 @@ int main(void) {
 #endif
 
   // Set up watchdog to trigger after 500ms
+#ifdef XBEE_TEST
+  watchdogConfig(WATCHDOG_OFF);
+#else
   watchdogConfig(WATCHDOG_2S);
+#endif
+  // For testing purposes
+  watchdogConfig(WATCHDOG_OFF);
 
   /* Set LED pin as output */
   LED_DDR |= _BV(LED);
@@ -374,12 +378,17 @@ int main(void) {
 #endif
 
   putpacket(0x04);
-
+  
   /* Forever loop */
   for (;;) {
     /* get character from UART */
     ch = getpacket();
 
+#ifdef XBEE_TEST
+	putpacket(ch);
+	ledhalt();
+
+#else
 	if(ch == STK_LOAD_ADDRESS) {
       // LOAD ADDRESS
       uint16_t newAddress;
@@ -408,8 +417,15 @@ int main(void) {
 
       // While that is going on, read in page contents
       bufPtr = buff;
-      do *bufPtr++ = getpacket();
+	  do
+	  {
+		  ch = getpacket();
+		  *bufPtr++ = ch;
+		  //putpacket(ch);
+	  }
       while (--length);
+
+	  //ledhalt();
 
       // If we are in NRWW section, page erase has to be delayed until now.
       // Todo: Take RAMPZ into account
@@ -513,12 +529,10 @@ int main(void) {
     	verifySpace();
     }
     else {
-#ifdef XBEE_TEST
-		putpacket(ch);
-#endif
       // This covers the response to other commands
       verifySpace();
     }
+#endif
     putpacket(STK_OK);
   }
 }
@@ -556,7 +570,7 @@ void putch(char ch) {
 // Creates a data packet and sends it to Xbee
 void putpacket(char cha)
 {
-#ifdef XBEE_SEND
+#ifdef XBEE
 	uint8_t checksum = FRAME_SUM;
 	checksum += cha;
 	checksum = 0xFF - (checksum & 0xFF);
@@ -579,16 +593,16 @@ void putpacket(char cha)
 
    putch(cha);
 
-#ifdef XBEE_SEND
+#ifdef XBEE
    putch(checksum);
 
    // Until the acknowledgement packet results in success, keep 
    // resending the packet
-   while (sendFailure() > 0) putpacket(cha);
+   //while (sendFailure() > 0) putpacket(cha);
 #endif
 }
 
-#ifdef XBEE_SEND
+#ifdef XBEE
 // A function to ensure delivery status
 uint8_t sendFailure()
 {
@@ -613,23 +627,31 @@ uint8_t getpacket(void)
 {
   uint8_t ch =  getch();
 
-#ifdef XBEE_RECV
-  if (ch == 126)
+#ifdef XBEE
+  while (ch != 0x7E)
+	  ch = getch();
+
+  getch();					// drop upper byte of length
+  uint8_t len = getch();	// store lower byte of length
+  ch = getch();				// frame id
+  
+  while (ch == 0x8B)
   {
-    getch();  // drop the higher byte of the length
-    uint8_t length = getch();
-    do
-    {
-      getch();
-    }
-    while (--length != 1);
+	  do getch();			// discard all bytes including checksum
+	  while (--len);
 
-    ch = getch();
-    getch();
-
-    return ch;
+	  getch();				// 0x7e
+	  getch();				// upper length
+	  len = getch();		// lower length
+	  ch = getch();			// frame id
   }
-  else return 0x00;
+
+  do getch();			// discard all bytes including checksum
+  while (--len > 2);
+
+  ch = getch();
+
+  getch();
 #endif
 
   return ch;
@@ -718,14 +740,19 @@ void uartDelay() {
 }
 #endif
 
-void getNch(uint8_t count) {
+void getNpacket(uint8_t count) {
   do getpacket(); while (--count);
   verifySpace();
 }
 
+void getNch(uint8_t count) {
+	do getch(); while (--count);
+	verifySpace();
+}
+
 void verifySpace() {
   if (getpacket() != CRC_EOP) {
-    watchdogConfig(WATCHDOG_16MS);    // shorten WD timeout
+    watchdogConfig(WATCHDOG_64MS);    // shorten WD timeout
     while (1)			      // and busy-loop so that WD causes
       ;				      //  a reset and app start.
   }
@@ -747,6 +774,12 @@ void flash_led(uint8_t count) {
   } while (--count);
 }
 #endif
+
+void ledhalt()
+{
+	LED_PORT ^= _BV(LED);
+	while (1);
+}
 
 // Watchdog functions. These are only safe with interrupts turned off.
 void watchdogReset() {

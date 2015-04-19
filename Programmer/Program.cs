@@ -12,7 +12,7 @@ namespace TestProgrammer
     class Program
     {
         static SerialPort ser;
-        static string path = "COM18";
+        static string path = "COM22";
         static bool xbeePackets = true;
 
         // Declaration STK of constants
@@ -65,7 +65,7 @@ namespace TestProgrammer
         const byte DELIMITER = 126;     // decimal for 0x7E
         const byte LENGTH_UPPER = 0;    // decimal for 0x00
         const byte LENGTH_LOWER = 15;   // decimal for 0x0F
-        const byte FRAME_TYPE = 16;     // decimal for 0x00, TX request
+        const byte FRAME_TYPE = 16;     // decimal for 0x10, TX request
         const byte FRAME_ID = 1;        // decimal for 0x01
         const byte OPTIONS = 0;         // decimal for 0x00, default options
         const byte FRAME_SUM = 123;     // decimal for 0x7B, sum of all the bytes before the payload
@@ -73,14 +73,22 @@ namespace TestProgrammer
 
         const byte STATUS_PACKETSIZE = 11;
         const byte SEND_PACKETSIZE = 19;
+        const byte RECV_PACKETSIZE = 17;
+
+        const byte STATUS_FTYPE = 0x8B;
+        const byte RECV_FTYPE = 0x90;
 
         const byte DELIVERY_STATUS_POS = 8;
         const byte DATA_POS = 17;
+
+        const byte XBEE_DELAY = 200;     // Delay for write operations (ms)
         #endregion
 
         static byte[] frameHeader = new byte[] { DELIMITER, LENGTH_UPPER, LENGTH_LOWER, FRAME_TYPE, FRAME_ID };
         static byte[] xBeeAddress64 = new byte[] { 0x00, 0x13, 0xA2, 0x00, 0x40, 0xB1, 0x82, 0x45 };
         static byte[] xBeeAddress16 = new byte[] { 0xFF, 0xFE };
+
+        static List<byte[]> xbeeBuffer = new List<byte[]>();
 
         static void Main(string[] args)
         {
@@ -93,7 +101,7 @@ namespace TestProgrammer
             List<byte[]> programData = new List<byte[]>();
             List<byte[]> programAddresses = new List<byte[]>();
 
-            readHexFile("Blank.hex", ref programData, ref programAddresses);
+            readHexFile("Blink.hex", ref programData, ref programAddresses);
             programBoard(programAddresses, programData);
 
             //resetBoard();
@@ -101,12 +109,14 @@ namespace TestProgrammer
             //enterProgrammingMode();
 
             //// A buffer to hold data being sent
-            //byte[] buff = new byte[] { STK_GET_SYNC, CRC_EOP };
+            ////byte[] buff = new byte[] { STK_GET_SYNC, CRC_EOP };
+            //byte[] buff = new byte[] { STK_PROG_PAGE, 0x00, 0xFF, 0x46, CRC_EOP };
 
             //char ch = Console.ReadKey(true).KeyChar;
 
             //while (ch != 0x0d)
             //{
+            //    //writeToPort(new byte[] { (byte) ch }, true);
             //    writeToPort(buff, true);
             //    getResponse();
             //    ch = Console.ReadKey(true).KeyChar;
@@ -189,14 +199,35 @@ namespace TestProgrammer
         /// </summary>
         /// <param name="print">Optionally prints data to console. Default is false.</param>
         /// <returns>Returns whether the packet was dropped or corrupted.</returns>
-        static bool sendFailure(bool print = true)
+        static bool sendFailure(bool print = true, bool response = false)
         {
-            byte[] buff = new byte[STATUS_PACKETSIZE];
+            byte[] buff = new byte[RECV_PACKETSIZE];
 
             // Wait for data
             while (ser.BytesToRead < STATUS_PACKETSIZE) ;
 
-            ser.Read(buff, 0, 11);
+            while (true)
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    buff[i] = (byte)ser.ReadByte();
+                }
+
+                ser.Read(buff, 3, buff[2] + 1);
+
+                if (buff[3] == RECV_FTYPE)
+                {
+                    xbeeBuffer.Add(buff);
+                    buff = new byte[RECV_PACKETSIZE];
+
+                    // Wait for data
+                    while (ser.BytesToRead < STATUS_PACKETSIZE) ;
+                }
+                else
+                {
+                    break;
+                }
+            }
 
             if (print)
             {
@@ -212,10 +243,25 @@ namespace TestProgrammer
             {
                 case 0x24:
                     throw new Exception("Input XBee address not found.");
+                case 0x00:
+                    if (response)
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine("Press y to read or any other key to skip.\n");
+                        if (Console.ReadKey(true).KeyChar == 'y')
+                        {
+                            getResponse();
+                            Console.WriteLine();
+                            //Console.WriteLine("Press any key to exit.\n");
+                            //Console.ReadKey(true);
+                            //Environment.Exit(1);
+                        }
+                        else Console.WriteLine("Skipped\n");
+                    }
+                    return false;
                 default:
-                    bool failure = buff[DELIVERY_STATUS_POS] != 0;
-                    if (failure && print) Console.WriteLine("Transmission failed. Retrying");
-                    return failure;
+                    if (print) Console.WriteLine("Transmission failed. Retrying");
+                    return true;
             }
         }
 
@@ -226,11 +272,13 @@ namespace TestProgrammer
         /// <param name="data">Byte array to write to the serial port.</param>
         /// <param name="xbee">Creates and sends XBee packets if set to true. Default is false.</param>
         /// <param name="print">Optionally prints data to console. Default is false.</param>
-        static void writeToPort(byte[] data, bool xbee = false, bool print = true)
+        static void writeToPort(byte[] data, bool xbee = false, bool print = true, bool delay = false)
         {
             bool portClosed = !ser.IsOpen;
 
             if (portClosed) ser.Open();
+
+            bool x = false;
 
             if (xbee)
             {
@@ -257,9 +305,20 @@ namespace TestProgrammer
 
                             Console.WriteLine();
                         }
+
+                        if (delay)
+                        {
+                            //Thread.Sleep(XBEE_DELAY);
+                            //Console.WriteLine();
+                            //getResponse();
+                            //Console.WriteLine();
+                            //Console.ReadKey(true);
+                            if (data[idx] == CRC_EOP)
+                                x = true;
+                        }
                     }
                     // Resend data in case of failure
-                    while (sendFailure(false));
+                    while (sendFailure(false, x));
 
                     idx++;
                 }
@@ -328,14 +387,32 @@ namespace TestProgrammer
             List<byte> response = new List<byte>(); // A list that holds all the received data
             byte rByte = 0xFF;          // Holds a byte of data recieved from the board
             long timer = (!xbeePackets) ? 2000000 : 5000000;       // Timer to stop app if nothing is received
-            bool portClosed = !ser.IsOpen;
+            bool dataInBuffer = false;
 
+            // Check xbeeBuffer list for received responses
+            if (xbeeBuffer.Count > 0)
+            {
+                dataInBuffer = true;
+
+                foreach (byte[] buff in xbeeBuffer)
+                {
+                    foreach (byte b in buff)
+                    {
+                        response.Add(b);
+                    }
+                }
+
+                xbeeBuffer.Clear();
+            }
+
+            // Open port if closed
+            bool portClosed = !ser.IsOpen;
             if (portClosed) ser.Open();
 
             while (ser.BytesToRead == 0 && timer > 0)   // Wait for data to be available
                 timer--;    // Decrement timer
 
-            if (timer == 0)
+            if (timer == 0 && !dataInBuffer)
             {
                 Console.WriteLine("Timeout error. Press any key to exit...");
                 Console.ReadKey();
@@ -397,7 +474,7 @@ namespace TestProgrammer
                 getResponse(print);
 
                 // Write the data to the flash memory
-                writeToPort(program[idx], xbeePackets, print);
+                writeToPort(program[idx], xbeePackets, print, false);
 
                 getResponse(print);
             }

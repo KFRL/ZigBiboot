@@ -1,13 +1,13 @@
 Fuse setting to be used for larger bootloader section.
 avrdude -c usbasp -p m328p -b 115200 -U lfuse:w:0xff:m -U hfuse:w:0xdc:m -U efuse:w:0x05:m
 
-For compiling the optiboot file1
+For compiling the optiboot file
 make atmega328
 
 For programming with a USBasp programmer
 avrdude -c usbasp -p m328p -b 115200 -U flash:w:optiboot_atmega328.hex
 
-
+------------------------------------------------------------
 This directory contains the Optiboot small bootloader for AVR
 microcontrollers, somewhat modified specifically for the Arduino
 environment.
