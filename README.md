@@ -1,4 +1,5 @@
 # ZigBiboot
+## IN PRE-ALPHA STAGE, NOT INTENDED FOR USE YET
 Wirelessly Programmming Arduino through ZigBee modules
 
 - Currently only supports ATMega328 based boards (Arduino UNO)
