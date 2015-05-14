@@ -1,7 +1,7 @@
 # Remote Programmming Art
 Change the default bootloader of Arduino to accommodate programming through ZigBees
 
-How to use
+#### How to use
 
 1)  Change the ZigBee addresses in the Optiboot.c and Program.cs files.
 2)  Burn the bootloader into the mirocontroller using any means of writing the flash 
@@ -13,7 +13,7 @@ How to use
 5)  Compile and run the program using Visual Studio. You'll have to manually reset the board
     when prompted. It will begin transferring the program.
     
-Future Updates
+#### Future Updates
 
 - Make the ZigBee addressing dynamic so it can be changed at run time
 - Create a UI
