@@ -1,5 +1,7 @@
-# Remote Programmming Art
-Change the default bootloader of Arduino to accommodate programming through ZigBees
+# ZigBiboot
+Wirelessly Programmming Arduino through ZigBee modules
+
+- Currently only supports ATMega328 based boards (Arduino UNO)
 
 #### How to use
 
