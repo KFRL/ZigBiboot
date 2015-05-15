@@ -1,0 +1,8 @@
+C:\Users\Administrator\Documents\GitHub\Programmer\ZigBiboot\bin\Debug\ZigBiboot.exe
+C:\Users\Administrator\Documents\GitHub\Programmer\ZigBiboot\bin\Debug\ZigBiboot.pdb
+C:\Users\Administrator\Documents\GitHub\Programmer\ZigBiboot\obj\Debug\ZigBiboot.csprojResolveAssemblyReference.cache
+C:\Users\Administrator\Documents\GitHub\Programmer\ZigBiboot\obj\Debug\Programmer.MainUI.resources
+C:\Users\Administrator\Documents\GitHub\Programmer\ZigBiboot\obj\Debug\ZigBiboot.Properties.Resources.resources
+C:\Users\Administrator\Documents\GitHub\Programmer\ZigBiboot\obj\Debug\ZigBiboot.csproj.GenerateResource.Cache
+C:\Users\Administrator\Documents\GitHub\Programmer\ZigBiboot\obj\Debug\ZigBiboot.exe
+C:\Users\Administrator\Documents\GitHub\Programmer\ZigBiboot\obj\Debug\ZigBiboot.pdb
