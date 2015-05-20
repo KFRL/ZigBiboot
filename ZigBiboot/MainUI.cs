@@ -20,8 +20,8 @@ namespace Programmer
     public partial class MainUI : Form
     {
         static SerialPort ser;
-        static string comPath = "COM15";
-        static string filePath = "Blink.hex";
+        static string comPath = "COM5";
+        static string defaultFilePath = "Blink.hex";
         static bool xbeePackets = true;
 
         // Declaration STK of constants
@@ -71,13 +71,14 @@ namespace Programmer
 
         // XBee Constants
         #region XBee
+        const byte ZB_LOAD_ADDRESS = 0x80;
+
         const byte DELIMITER = 126;     // decimal for 0x7E
         const byte LENGTH_UPPER = 0;    // decimal for 0x00
         const byte LENGTH_LOWER = 15;   // decimal for 0x0F
         const byte FRAME_TYPE = 16;     // decimal for 0x00, TX request
         const byte FRAME_ID = 1;        // decimal for 0x01
         const byte OPTIONS = 0;         // decimal for 0x00, default options
-        const byte FRAME_SUM = 123;     // decimal for 0x7B, sum of all the bytes before the payload
         const byte BROADCAST_RADIUS = 0;// decimal for 0x00
 
         const byte STATUS_PACKETSIZE = 11;
@@ -92,9 +93,10 @@ namespace Programmer
         #endregion
 
         static byte[] frameHeader = new byte[] { DELIMITER, LENGTH_UPPER, LENGTH_LOWER, FRAME_TYPE, FRAME_ID };
-        static byte[] hostXBeeAddress64 = new byte[] { 0x00, 0x13, 0xA2, 0x00, 0x40, 0xB1, 0x82, 0x45 };
+        static byte[] hostXBeeAddress64 = new byte[] { 0x00, 0x13, 0xA2, 0x00, 0x40, 0xAD, 0xBE, 0x87 };
         static byte[] targetXBeeAddress64 = new byte[] { 0x00, 0x13, 0xA2, 0x00, 0x40, 0xB1, 0x82, 0x45 };
         static byte[] xBeeAddress16 = new byte[] { 0xFF, 0xFE };
+        static byte frameSum = 123;  // Used to store the sum of all bytes before payload
 
         static List<byte[]> xbeeBuffer = new List<byte[]>();
 
@@ -113,7 +115,7 @@ namespace Programmer
             }
 
             comPortComboBox.Text = comPath;
-            fileNameBox.Text = filePath;
+            fileNameBox.Text = defaultFilePath;
         }
 
         private void browseBtn_Click(object sender, EventArgs e)
@@ -183,6 +185,26 @@ namespace Programmer
                     hostXBeeAddress64[j] = byte.Parse(hostAddress.Substring(idx, 2),
                         NumberStyles.HexNumber);
                 }
+
+                // Recalculate frameSum
+                frameSum = 0;
+                frameSum += FRAME_TYPE;
+                frameSum += FRAME_ID;
+                
+                // The 64-bit XBee address
+                foreach (byte b in targetXBeeAddress64)
+                {
+                    frameSum += b;
+                }
+                // The 16-bit XBee address
+                foreach (byte b in xBeeAddress16)
+                {
+                    frameSum += b;
+                }
+                // The options byte
+                frameSum += BROADCAST_RADIUS;
+                // The options byte
+                frameSum += OPTIONS;
             }
             catch(Exception exception)
             {
@@ -203,50 +225,19 @@ namespace Programmer
             {
                 Debug.Write(b.ToString("X2"));
             }
+            Debug.WriteLine("\nRecalculated frame sum: " + frameSum.ToString());
 #endif
 
         }
 
         private void UploadBtn_Click(object sender, EventArgs e)
         {
-            // Initialize serial port on which the Arduino is
-            ser = new SerialPort(comPath, 115200, Parity.None, 8, StopBits.One);
-
-            // Open the port for transmission
-            ser.Open();
-
-            List<byte[]> programData = new List<byte[]>();
-            List<byte[]> programAddresses = new List<byte[]>();
-
-            readHexFile("Blink.hex", ref programData, ref programAddresses);
-            programBoard(programAddresses, programData);
-
-            //resetBoard();
-            //waitForBootloader();
-            //enterProgrammingMode();
-
-            //// A buffer to hold data being sent
-            ////byte[] buff = new byte[] { STK_GET_SYNC, CRC_EOP };
-            //byte[] buff = new byte[] { STK_PROG_PAGE, 0x00, 0xFF, 0x46, CRC_EOP };
-
-            //char ch = Debug.ReadKey(true).KeyChar;
-
-            //while (ch != 0x0d)
-            //{
-            //    //writeToPort(new byte[] { (byte) ch }, true);
-            //    writeToPort(buff, true);
-            //    getResponse();
-            //    ch = Debug.ReadKey(true).KeyChar;
-            //}
-
-            //leaveProgrammingMode();
-
-            //while (Debug.ReadKey(true).KeyChar == 0x0d)
-            //{
-            //    resetBoard();
-            //}
-
-            if (ser.IsOpen) ser.Close();
+            if (!backgroundWorker.IsBusy)
+            {
+                backgroundWorker.RunWorkerAsync();
+                this.Enabled = false;
+                // TODO: Show dialog box
+            }
         }
 
         /// <summary>
@@ -438,7 +429,7 @@ namespace Programmer
             byte[] packet = new byte[SEND_PACKETSIZE];
             int idx = 0;
             // Calculate the checksum for the packet
-            byte checksum = (byte)(0xFF - ((FRAME_SUM + data) & 0xFF));
+            byte checksum = (byte)(0xFF - ((frameSum + data) & 0xFF));
 
             // The frame header
             foreach (byte b in frameHeader)
@@ -504,9 +495,7 @@ namespace Programmer
 
             if (timer == 0 && !dataInBuffer)
             {
-                Debug.WriteLine("Timeout error. Press any key to exit...");
-                Thread.Sleep(1000);
-                Environment.Exit(1);
+                throw new Exception("Timeout error. Device failed to respond");
             }
 
             // Makes sure there's no new data being written to the buffer
@@ -554,6 +543,20 @@ namespace Programmer
             resetBoard(print);
             waitForBootloader(print);
             enterProgrammingMode(print);
+
+            //// Command for the zigbee address
+            //byte[] addrCommand = new byte[10];
+            //addrCommand[0] = ZB_LOAD_ADDRESS;
+            //for (int i = 0; i < hostXBeeAddress64.Length; i++)
+            //{
+            //    addrCommand[i + 1] = hostXBeeAddress64[i];
+            //}
+            //addrCommand[9] = CRC_EOP;
+
+            //// Change the host ZigBee address
+            //writeToPort(addrCommand, xbeePackets, print);
+
+            //getResponse(print);
 
             // Program the flash memory
             for (int idx = 0; idx < addresses.Count; idx++)
@@ -710,6 +713,53 @@ namespace Programmer
                     Debug.WriteLine("");
                 }
             }
+        }
+
+        private void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            // Initialize serial port on which the Arduino is
+            ser = new SerialPort(comPath, 115200, Parity.None, 8, StopBits.One);
+
+            // Open the port for transmission
+            ser.Open();
+
+            List<byte[]> programData = new List<byte[]>();
+            List<byte[]> programAddresses = new List<byte[]>();
+
+            readHexFile(fileNameBox.Text, ref programData, ref programAddresses);
+            programBoard(programAddresses, programData);
+
+            //resetBoard();
+            //waitForBootloader();
+            //enterProgrammingMode();
+
+            //// A buffer to hold data being sent
+            ////byte[] buff = new byte[] { STK_GET_SYNC, CRC_EOP };
+            //byte[] buff = new byte[] { STK_PROG_PAGE, 0x00, 0xFF, 0x46, CRC_EOP };
+
+            //char ch = Debug.ReadKey(true).KeyChar;
+
+            //while (ch != 0x0d)
+            //{
+            //    //writeToPort(new byte[] { (byte) ch }, true);
+            //    writeToPort(buff, true);
+            //    getResponse();
+            //    ch = Debug.ReadKey(true).KeyChar;
+            //}
+
+            //leaveProgrammingMode();
+
+            //while (Debug.ReadKey(true).KeyChar == 0x0d)
+            //{
+            //    resetBoard();
+            //}
+
+            if (ser.IsOpen) ser.Close();
+        }
+
+        private void backgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            this.Enabled = true;
         }
     }
 }

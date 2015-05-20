@@ -6,3 +6,5 @@ C:\Users\Administrator\Documents\GitHub\Programmer\ZigBiboot\obj\Debug\ZigBiboot
 C:\Users\Administrator\Documents\GitHub\Programmer\ZigBiboot\obj\Debug\ZigBiboot.csproj.GenerateResource.Cache
 C:\Users\Administrator\Documents\GitHub\Programmer\ZigBiboot\obj\Debug\ZigBiboot.exe
 C:\Users\Administrator\Documents\GitHub\Programmer\ZigBiboot\obj\Debug\ZigBiboot.pdb
+C:\Users\Administrator\Documents\GitHub\Programmer\ZigBiboot\bin\Debug\Blank.hex
+C:\Users\Administrator\Documents\GitHub\Programmer\ZigBiboot\bin\Debug\Blink.hex

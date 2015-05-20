@@ -274,6 +274,9 @@ void appStart() __attribute__ ((naked));
 #endif
 
 #ifdef XBEE
+// Command to change address of host ZigBee
+#define ZB_LOAD_ADDRESS 0x80
+
 // XBee information
 #define DELIMITER 126     // decimal for 0x7E
 #define LENGTH_UPPER 0    // decimal for 0x00
@@ -282,15 +285,14 @@ void appStart() __attribute__ ((naked));
 #define FRAME_ID 1        // decimal for 0x01
 #define BROADCAST_RADIUS 0// decimal for 0x00
 #define OPTIONS 0         // decimal for 0x00, default options
-#define FRAME_SUM 245     // decimal for 0xF5, sum of all the bytes before the payload
 #define XBEE_ADDR_16H 255 // decimal for 0xFF
 #define XBEE_ADDR_16L 254 // decimal for 0xFE
 
 #define RECV_FRAMEID 144  // decimal for 0x90
 #define STATUS_FRAMEID 139// decimal for 0x8B
 
-// TODO: Make this dynamic
 uint8_t xbeeAddress[8];
+uint8_t frameSum;		  // holds sum of all bytes before payload
 #endif
 
 /* main program starts here */
@@ -305,6 +307,7 @@ int main(void) {
 	xbeeAddress[5] = 0xAD;
 	xbeeAddress[6] = 0xBE;
 	xbeeAddress[7] = 0x87;
+	frameSum = 245;
 #endif
 
   uint8_t ch;
@@ -402,6 +405,37 @@ int main(void) {
       address = newAddress;
       verifySpace();
     }
+	/* Change ZigBee address to respond to*/
+	//else if (ch == ZB_LOAD_ADDRESS)
+	//{
+	//	int i = 0;
+	//	for (; i < 8; i++)
+	//	{
+	//		xbeeAddress[i] = getpacket();
+	//	}
+
+	//	// recalculate frameSum
+	//	frameSum = 0;
+	//	frameSum += FRAME_TYPE;
+	//	frameSum += FRAME_ID;
+
+	//	// The 64-bit XBee address
+	//	for (i= 0; i < 8; i++)
+	//	{
+	//		frameSum += xbeeAddress[i];
+	//	}
+
+	//	// The 16 bit address
+	//	frameSum += XBEE_ADDR_16H;
+	//	frameSum += XBEE_ADDR_16L;
+	//	// The options byte
+	//	frameSum += BROADCAST_RADIUS;
+	//	// The options byte
+	//	frameSum += OPTIONS;
+
+	//	putpacket(frameSum);
+	//	ledhalt();
+	//}
     /* Write memory, length is big endian and is in bytes */
     else if(ch == STK_PROG_PAGE) {
       // PROGRAM PAGE - we support flash programming only, not EEPROM
@@ -571,7 +605,7 @@ void putch(char ch) {
 void putpacket(char cha)
 {
 #ifdef XBEE
-	uint8_t checksum = FRAME_SUM;
+	uint8_t checksum = frameSum;
 	checksum += cha;
 	checksum = 0xFF - (checksum & 0xFF);
   

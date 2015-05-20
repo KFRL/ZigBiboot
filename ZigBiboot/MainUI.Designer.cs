@@ -40,18 +40,19 @@
             this.targetZigBeeAddressLbl = new System.Windows.Forms.Label();
             this.targetZigBeeAddressTextBox = new System.Windows.Forms.TextBox();
             this.updateAddressesBtn = new System.Windows.Forms.Button();
+            this.backgroundWorker = new System.ComponentModel.BackgroundWorker();
             this.SuspendLayout();
             // 
             // fileNameBox
             // 
-            this.fileNameBox.Location = new System.Drawing.Point(79, 52);
+            this.fileNameBox.Location = new System.Drawing.Point(25, 42);
             this.fileNameBox.Name = "fileNameBox";
-            this.fileNameBox.Size = new System.Drawing.Size(130, 20);
+            this.fileNameBox.Size = new System.Drawing.Size(146, 20);
             this.fileNameBox.TabIndex = 0;
             // 
             // browseBtn
             // 
-            this.browseBtn.Location = new System.Drawing.Point(215, 51);
+            this.browseBtn.Location = new System.Drawing.Point(177, 42);
             this.browseBtn.Name = "browseBtn";
             this.browseBtn.Size = new System.Drawing.Size(75, 20);
             this.browseBtn.TabIndex = 1;
@@ -67,7 +68,7 @@
             // hexFileLabel
             // 
             this.hexFileLabel.AutoSize = true;
-            this.hexFileLabel.Location = new System.Drawing.Point(79, 33);
+            this.hexFileLabel.Location = new System.Drawing.Point(25, 23);
             this.hexFileLabel.Name = "hexFileLabel";
             this.hexFileLabel.Size = new System.Drawing.Size(45, 13);
             this.hexFileLabel.TabIndex = 2;
@@ -75,7 +76,7 @@
             // 
             // UploadBtn
             // 
-            this.UploadBtn.Location = new System.Drawing.Point(135, 245);
+            this.UploadBtn.Location = new System.Drawing.Point(87, 218);
             this.UploadBtn.Name = "UploadBtn";
             this.UploadBtn.Size = new System.Drawing.Size(112, 42);
             this.UploadBtn.TabIndex = 3;
@@ -86,7 +87,7 @@
             // comPortComboBox
             // 
             this.comPortComboBox.FormattingEnabled = true;
-            this.comPortComboBox.Location = new System.Drawing.Point(79, 105);
+            this.comPortComboBox.Location = new System.Drawing.Point(25, 84);
             this.comPortComboBox.Name = "comPortComboBox";
             this.comPortComboBox.Size = new System.Drawing.Size(121, 21);
             this.comPortComboBox.TabIndex = 4;
@@ -96,7 +97,7 @@
             // comPortLabel
             // 
             this.comPortLabel.AutoSize = true;
-            this.comPortLabel.Location = new System.Drawing.Point(79, 86);
+            this.comPortLabel.Location = new System.Drawing.Point(25, 65);
             this.comPortLabel.Name = "comPortLabel";
             this.comPortLabel.Size = new System.Drawing.Size(53, 13);
             this.comPortLabel.TabIndex = 5;
@@ -105,7 +106,7 @@
             // hostZigBeeAddressLbl
             // 
             this.hostZigBeeAddressLbl.AutoSize = true;
-            this.hostZigBeeAddressLbl.Location = new System.Drawing.Point(51, 148);
+            this.hostZigBeeAddressLbl.Location = new System.Drawing.Point(22, 108);
             this.hostZigBeeAddressLbl.Name = "hostZigBeeAddressLbl";
             this.hostZigBeeAddressLbl.Size = new System.Drawing.Size(107, 13);
             this.hostZigBeeAddressLbl.TabIndex = 6;
@@ -113,16 +114,16 @@
             // 
             // hostZigBeeAddressTextBox
             // 
-            this.hostZigBeeAddressTextBox.Location = new System.Drawing.Point(54, 165);
+            this.hostZigBeeAddressTextBox.Location = new System.Drawing.Point(25, 125);
             this.hostZigBeeAddressTextBox.Name = "hostZigBeeAddressTextBox";
-            this.hostZigBeeAddressTextBox.Size = new System.Drawing.Size(100, 20);
+            this.hostZigBeeAddressTextBox.Size = new System.Drawing.Size(146, 20);
             this.hostZigBeeAddressTextBox.TabIndex = 7;
             this.hostZigBeeAddressTextBox.WordWrap = false;
             // 
             // targetZigBeeAddressLbl
             // 
             this.targetZigBeeAddressLbl.AutoSize = true;
-            this.targetZigBeeAddressLbl.Location = new System.Drawing.Point(174, 148);
+            this.targetZigBeeAddressLbl.Location = new System.Drawing.Point(22, 148);
             this.targetZigBeeAddressLbl.Name = "targetZigBeeAddressLbl";
             this.targetZigBeeAddressLbl.Size = new System.Drawing.Size(116, 13);
             this.targetZigBeeAddressLbl.TabIndex = 8;
@@ -130,27 +131,32 @@
             // 
             // targetZigBeeAddressTextBox
             // 
-            this.targetZigBeeAddressTextBox.Location = new System.Drawing.Point(177, 165);
+            this.targetZigBeeAddressTextBox.Location = new System.Drawing.Point(25, 165);
             this.targetZigBeeAddressTextBox.Name = "targetZigBeeAddressTextBox";
-            this.targetZigBeeAddressTextBox.Size = new System.Drawing.Size(100, 20);
+            this.targetZigBeeAddressTextBox.Size = new System.Drawing.Size(146, 20);
             this.targetZigBeeAddressTextBox.TabIndex = 9;
             this.targetZigBeeAddressTextBox.WordWrap = false;
             // 
             // updateAddressesBtn
             // 
-            this.updateAddressesBtn.Location = new System.Drawing.Point(311, 148);
+            this.updateAddressesBtn.Location = new System.Drawing.Point(177, 136);
             this.updateAddressesBtn.Name = "updateAddressesBtn";
-            this.updateAddressesBtn.Size = new System.Drawing.Size(66, 37);
+            this.updateAddressesBtn.Size = new System.Drawing.Size(87, 36);
             this.updateAddressesBtn.TabIndex = 10;
             this.updateAddressesBtn.Text = "Update Addresses";
             this.updateAddressesBtn.UseVisualStyleBackColor = true;
             this.updateAddressesBtn.Click += new System.EventHandler(this.updateAddressesBtn_Click);
             // 
+            // backgroundWorker
+            // 
+            this.backgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker_DoWork);
+            this.backgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorker_RunWorkerCompleted);
+            // 
             // MainUI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(452, 299);
+            this.ClientSize = new System.Drawing.Size(289, 289);
             this.Controls.Add(this.updateAddressesBtn);
             this.Controls.Add(this.targetZigBeeAddressTextBox);
             this.Controls.Add(this.targetZigBeeAddressLbl);
@@ -183,5 +189,6 @@
         private System.Windows.Forms.Label targetZigBeeAddressLbl;
         private System.Windows.Forms.TextBox targetZigBeeAddressTextBox;
         private System.Windows.Forms.Button updateAddressesBtn;
+        private System.ComponentModel.BackgroundWorker backgroundWorker;
     }
 }
