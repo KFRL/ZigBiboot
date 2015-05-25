@@ -20,7 +20,7 @@ namespace Programmer
     public partial class MainUI : Form
     {
         static SerialPort ser;
-        static string comPath = "COM5";
+        static string comPath = "COM27";
         static string defaultFilePath = "Blink.hex";
         static bool xbeePackets = true;
 
@@ -92,13 +92,16 @@ namespace Programmer
         const byte DATA_POS = 17;
         #endregion
 
+        // XBee variables
+        #region Xbee_Vars
         static byte[] frameHeader = new byte[] { DELIMITER, LENGTH_UPPER, LENGTH_LOWER, FRAME_TYPE, FRAME_ID };
         static byte[] hostXBeeAddress64 = new byte[] { 0x00, 0x13, 0xA2, 0x00, 0x40, 0xAD, 0xBE, 0x87 };
-        static byte[] targetXBeeAddress64 = new byte[] { 0x00, 0x13, 0xA2, 0x00, 0x40, 0xB1, 0x82, 0x45 };
+        static byte[] targetXBeeAddress64 = new byte[] { 0x00, 0x13, 0xA2, 0x00, 0x40, 0xAD, 0xBE, 0xC7 };
         static byte[] xBeeAddress16 = new byte[] { 0xFF, 0xFE };
         static byte frameSum = 123;  // Used to store the sum of all bytes before payload
 
         static List<byte[]> xbeeBuffer = new List<byte[]>();
+        #endregion
 
         public MainUI()
         {
@@ -116,6 +119,8 @@ namespace Programmer
 
             comPortComboBox.Text = comPath;
             fileNameBox.Text = defaultFilePath;
+
+            recalculateFrameSum();
         }
 
         private void browseBtn_Click(object sender, EventArgs e)
@@ -133,9 +138,10 @@ namespace Programmer
                 }
                 catch (InvalidOperationException)
                 {
-                    // TODO: Show dialog box
+                    MessageBox.Show("Invalid operation with result code " + result.ToString(), 
+                        "IOException", MessageBoxButtons.OK);
 #if DEBUG
-                    Debug.WriteLine("Invalid Operation with result code " + result.ToString());
+                    Debug.WriteLine("Invalid operation with result code " + result.ToString());
 #endif
                 }
             }
@@ -186,29 +192,12 @@ namespace Programmer
                         NumberStyles.HexNumber);
                 }
 
-                // Recalculate frameSum
-                frameSum = 0;
-                frameSum += FRAME_TYPE;
-                frameSum += FRAME_ID;
-                
-                // The 64-bit XBee address
-                foreach (byte b in targetXBeeAddress64)
-                {
-                    frameSum += b;
-                }
-                // The 16-bit XBee address
-                foreach (byte b in xBeeAddress16)
-                {
-                    frameSum += b;
-                }
-                // The options byte
-                frameSum += BROADCAST_RADIUS;
-                // The options byte
-                frameSum += OPTIONS;
+                recalculateFrameSum();
             }
             catch(Exception exception)
             {
-                // TODO: Show dialog box
+                MessageBox.Show(exception.Message,
+                        "Exception", MessageBoxButtons.OK);
 #if DEBUG
                 Debug.WriteLine(exception.Message);
 #endif
@@ -267,8 +256,49 @@ namespace Programmer
             {
                 Debug.WriteLine("Resetting the board...\n");
             }
-            //ser.DtrEnable = !ser.DtrEnable;     // Toggle DTR
-            //ser.DtrEnable = !ser.DtrEnable;     // Toggle DTR
+
+            // Use remote AT commands to reset toggle DIO pin 1
+            byte[] switchLow = new byte[] { 0x7E, 0x00, 0x10, 0x17, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFE, 0x02, 0x44, 0x31, 0x04, 0x48 };
+            byte[] switchHigh = new byte[] { 0x7E, 0x00, 0x10, 0x17, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFE, 0x02, 0x44, 0x31, 0x05, 0x47 };
+
+            // Load target address in to the command
+            for (int addrIdx = 0; addrIdx < targetXBeeAddress64.Length; addrIdx++)
+            {
+                switchLow[addrIdx + 5] = targetXBeeAddress64[addrIdx];
+                switchHigh[addrIdx + 5] = targetXBeeAddress64[addrIdx];
+            }
+
+            switchHigh[switchHigh.Length - 1] = calculateChecksum(switchHigh);
+            switchLow[switchLow.Length - 1] = calculateChecksum(switchLow);
+
+#if DEBUG
+            Debug.Write("Switch Low: ");
+            foreach (byte b in switchLow)
+            {
+                Debug.Write(b.ToString("X2") + " ");
+            }
+            Debug.Write("\nSwitch High: ");
+            foreach (byte b in switchHigh)
+            {
+                Debug.Write(b.ToString("X2") + " ");
+            }
+            Debug.Write("\n");
+#endif
+
+            bool portClosed = !ser.IsOpen;
+            if (portClosed) ser.Open();
+
+            // TODO: Show reset messagebox
+
+            ser.Write(switchLow, 0, switchLow.Length);
+            getResponse(print);
+
+            Thread.Sleep(2);
+
+            ser.Write(switchHigh, 0, switchHigh.Length);
+            getResponse(print);
+
+            if (portClosed) ser.Close();
         }
 
         /// <summary>
@@ -369,8 +399,6 @@ namespace Programmer
             bool portClosed = !ser.IsOpen;
 
             if (portClosed) ser.Open();
-
-            bool x = false;
 
             if (xbee)
             {
@@ -760,6 +788,42 @@ namespace Programmer
         private void backgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             this.Enabled = true;
+        }
+
+        private static byte calculateChecksum(byte[] packet)
+        {
+            byte sum = 0;
+            int length = packet[2];
+            
+            for (int i = 0; i < length; i++)
+            {
+                sum += packet[i + 3];
+            }
+
+            return (byte) (0xFF - sum);
+        }
+
+        private static void recalculateFrameSum()
+        {
+            // Recalculate frameSum
+            frameSum = 0;
+            frameSum += FRAME_TYPE;
+            frameSum += FRAME_ID;
+
+            // The 64-bit XBee address
+            foreach (byte b in targetXBeeAddress64)
+            {
+                frameSum += b;
+            }
+            // The 16-bit XBee address
+            foreach (byte b in xBeeAddress16)
+            {
+                frameSum += b;
+            }
+            // The options byte
+            frameSum += BROADCAST_RADIUS;
+            // The options byte
+            frameSum += OPTIONS;
         }
     }
 }

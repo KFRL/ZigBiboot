@@ -300,14 +300,15 @@ int main(void) {
 	
 #ifdef XBEE
 	xbeeAddress[0] = 0x00;
-	xbeeAddress[1] = 0x13;
-	xbeeAddress[2] = 0xA2;
+	xbeeAddress[1] = 0x00;
+	xbeeAddress[2] = 0x00;
 	xbeeAddress[3] = 0x00;
-	xbeeAddress[4] = 0x40;
-	xbeeAddress[5] = 0xAD;
-	xbeeAddress[6] = 0xBE;
-	xbeeAddress[7] = 0x87;
-	frameSum = 245;
+	xbeeAddress[4] = 0x00;
+	xbeeAddress[5] = 0x00;
+	xbeeAddress[6] = 0x00;
+	xbeeAddress[7] = 0x00;
+	
+	frameSum = 0x0e;
 #endif
 
   uint8_t ch;
@@ -455,11 +456,8 @@ int main(void) {
 	  {
 		  ch = getpacket();
 		  *bufPtr++ = ch;
-		  //putpacket(ch);
 	  }
       while (--length);
-
-	  //ledhalt();
 
       // If we are in NRWW section, page erase has to be delayed until now.
       // Todo: Take RAMPZ into account
@@ -669,7 +667,7 @@ uint8_t getpacket(void)
   uint8_t len = getch();	// store lower byte of length
   ch = getch();				// frame id
   
-  while (ch == 0x8B)
+  while (ch != 0x90)
   {
 	  do getch();			// discard all bytes including checksum
 	  while (--len);
