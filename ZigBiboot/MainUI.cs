@@ -20,7 +20,7 @@ namespace Programmer
     public partial class MainUI : Form
     {
         static SerialPort ser;
-        static string comPath = "COM27";
+        static string comPath = "COM7";
         static string defaultFilePath = "Blink.hex";
         static bool xbeePackets = true;
 
@@ -72,6 +72,7 @@ namespace Programmer
         // XBee Constants
         #region XBee
         const byte ZB_LOAD_ADDRESS = 0x80;
+        const byte PAYLOAD_MAX = 72;    // Max number of bytes in payload
 
         const byte DELIMITER = 126;     // decimal for 0x7E
         const byte LENGTH_UPPER = 0;    // decimal for 0x00
@@ -389,9 +390,9 @@ namespace Programmer
 
         /// <summary>
         /// Use this function to send data to the board. It can be used to send data directly or
-        /// by using XBee API frames.
+        /// by using XBee API frames. The data array to be sent must be less than PAYLOAD_MAX constant.
         /// </summary>
-        /// <param name="data">Byte array to write to the serial port.</param>
+        /// <param name="data">Byte array of max size PAYLOAD_MAX to write to the serial port</param>
         /// <param name="xbee">Creates and sends XBee packets if set to true. Default is false.</param>
         /// <param name="print">Optionally prints data to Debug. Default is false.</param>
         static void writeToPort(byte[] data, bool xbee = false, bool print = true)
@@ -402,34 +403,25 @@ namespace Programmer
 
             if (xbee)
             {
-                int idx = 0;
-                while (idx < data.Length)
+                if (data.Length > PAYLOAD_MAX)
                 {
-                    do
+                    List<byte> dataList = data.ToList();
+
+                    for (int idx = 0; idx < dataList.Count; idx += PAYLOAD_MAX)
                     {
-                        // Create packet for the a byte
-                        byte[] packet = createPacket(data[idx]);
+                        int count = (idx + PAYLOAD_MAX > dataList.Count) ?
+                            (dataList.Count - idx) : PAYLOAD_MAX - 1;
 
-                        ser.Write(packet, 0, packet.Length);
-
-                        if (print)
-                        {
-                            Debug.Write("Send:");
-
-                            foreach (byte b in packet)
-                            {
-                                Debug.Write(" " + b.ToString("X2"));
-                            }
-
-                            //Debug.Write(" [{0:X2}]", packet[packet.Length - 2]);
-
-                            Debug.WriteLine("");
-                        }
+                        // Create a packet and transmit it
+                        transmitPacket(
+                            createTXPacket(dataList.GetRange(idx, count).ToArray())
+                            );
                     }
-                    // Resend data in case of failure
-                    while (sendFailure(false));
-
-                    idx++;
+                }
+                else
+                {
+                    // Create a packet and transmit it
+                    transmitPacket(createTXPacket(data));
                 }
             }
             else
@@ -447,23 +439,51 @@ namespace Programmer
             if (portClosed) ser.Close();
         }
 
+        // TODO:
         /// <summary>
-        /// Create an XBee packet for the given byte.
+        /// 
         /// </summary>
-        /// <param name="data">Byte of data to be transferred</param>
-        /// <returns>XBee packet to be transferred.</returns>
-        static byte[] createPacket(byte data)
+        /// <param name="packet"></param>
+        /// <param name="print"></param>
+        static private void transmitPacket(byte[] packet, bool print = true)
         {
-            byte[] packet = new byte[SEND_PACKETSIZE];
-            int idx = 0;
-            // Calculate the checksum for the packet
-            byte checksum = (byte)(0xFF - ((frameSum + data) & 0xFF));
-
-            // The frame header
-            foreach (byte b in frameHeader)
+            do
             {
-                packet[idx++] = b;
+                ser.Write(packet, 0, packet.Length);
+
+                if (print)
+                {
+                    Debug.Write("Send:");
+
+                    foreach (byte b in packet)
+                    {
+                        Debug.Write(" " + b.ToString("X2"));
+                    }
+
+                    Debug.WriteLine("");
+                }
             }
+            // Resend data in case of failure
+            while (sendFailure(false));
+        }
+
+        /// <summary>
+        /// Create an XBee packet for the given data array.
+        /// </summary>
+        /// <param name="data">Array of data to be packetized</param>
+        /// <returns>XBee packet to be transferred.</returns>
+        static byte[] createTXPacket(byte[] payload)
+        {
+            byte[] packet = new byte[SEND_PACKETSIZE + payload.Length];
+
+            int idx = 0;
+
+            packet[idx++] = DELIMITER;
+            packet[idx++] = LENGTH_UPPER;
+            // Length of packet exluding  delimiter, length and checksum
+            packet[idx++] = (byte)(packet.Length - 4);
+            packet[idx++] = FRAME_TYPE;
+            packet[idx++] = FRAME_ID;
             // The 64-bit XBee address
             foreach (byte b in targetXBeeAddress64)
             {
@@ -474,18 +494,18 @@ namespace Programmer
             {
                 packet[idx++] = b;
             }
-            // The options byte
             packet[idx++] = BROADCAST_RADIUS;
-            // The options byte
             packet[idx++] = OPTIONS;
-            // Single byte of data
-            packet[idx++] = data;
+            // The payload
+            foreach (byte b in payload)
+            {
+                packet[idx++] = b;
+            }
             // The checksum
-            packet[idx++] = checksum;
+            packet[idx++] = calculateChecksum(packet);
 
             return packet;
         }
-
         /// <summary>
         /// Gets response from the board and displays it
         /// </summary>
@@ -595,7 +615,10 @@ namespace Programmer
                 getResponse(print);
 
                 // Write the data to the flash memory
-                writeToPort(program[idx], xbeePackets, print);
+                foreach (byte b in program[idx])
+                {
+                    writeToPort(new byte[] { b }, xbeePackets, print);
+                }
 
                 getResponse(print);
             }
@@ -794,13 +817,13 @@ namespace Programmer
         {
             byte sum = 0;
             int length = packet[2];
-            
+
             for (int i = 0; i < length; i++)
             {
                 sum += packet[i + 3];
             }
 
-            return (byte) (0xFF - sum);
+            return (byte)(0xFF - sum);
         }
 
         private static void recalculateFrameSum()
