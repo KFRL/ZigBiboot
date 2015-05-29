@@ -1,13 +1,11 @@
 /**********************************************************/
-/* Optiboot bootloader for Arduino                        */
+/* Zigbiboot bootloader for Arduino                       */
 /*                                                        */
 /* http://optiboot.googlecode.com                         */
 /*                                                        */
-/* Arduino-maintained version : See README.TXT            */
-/* http://code.google.com/p/arduino/                      */
-/*                                                        */
-/* Heavily optimised bootloader that is faster and        */
-/* smaller than the Arduino standard bootloader           */
+/* Bootloader based off Optiboot that can be used         */
+/* to program Arduino wirelessly through ZigBee           */
+/* networks.                                              */
 /*                                                        */
 /* Enhancements:                                          */
 /*   Fits in 512 bytes, saving 1.5K of code space         */
@@ -20,41 +18,13 @@
 /*                                                        */
 /* What you lose:                                         */
 /*   Implements a skeleton STK500 protocol which is       */
-/*     missing several features including EEPROM          */
-/*     programming and non-page-aligned writes            */
+/*   missing several features including EEPROM            */
+/*   programming and non-page-aligned writes              */
 /*   High baud rate breaks compatibility with standard    */
-/*     Arduino flash settings                             */
+/*   Arduino flash settings                               */
 /*                                                        */
 /* Fully supported:                                       */
-/*   ATmega168 based devices  (Diecimila etc)             */
 /*   ATmega328P based devices (Duemilanove etc)           */
-/*                                                        */
-/* Alpha test                                             */
-/*   ATmega1280 based devices (Arduino Mega)              */
-/*                                                        */
-/* Work in progress:                                      */
-/*   ATmega644P based devices (Sanguino)                  */
-/*   ATtiny84 based devices (Luminet)                     */
-/*                                                        */
-/* Does not support:                                      */
-/*   USB based devices (eg. Teensy)                       */
-/*                                                        */
-/* Assumptions:                                           */
-/*   The code makes several assumptions that reduce the   */
-/*   code size. They are all true after a hardware reset, */
-/*   but may not be true if the bootloader is called by   */
-/*   other means or on other hardware.                    */
-/*     No interrupts can occur                            */
-/*     UART and Timer 1 are set to their reset state      */
-/*     SP points to RAMEND                                */
-/*                                                        */
-/* Code builds on code, libraries and optimisations from: */
-/*   stk500boot.c          by Jason P. Kyle               */
-/*   Arduino bootloader    http://arduino.cc              */
-/*   Spiff's 1K bootloader http://spiffie.org/know/arduino_1k_bootloader/bootloader.shtml */
-/*   avr-libc project      http://nongnu.org/avr-libc     */
-/*   Adaboot               http://www.ladyada.net/library/arduino/bootloader.html */
-/*   AVR305                Atmel Application Note         */
 /*                                                        */
 /* This program is free software; you can redistribute it */
 /* and/or modify it under the terms of the GNU General    */
@@ -76,71 +46,6 @@
 /* Licence can be viewed at                               */
 /* http://www.fsf.org/licenses/gpl.txt                    */
 /*                                                        */
-/**********************************************************/
-
-
-/**********************************************************/
-/*                                                        */
-/* Optional defines:                                      */
-/*                                                        */
-/**********************************************************/
-/*                                                        */
-/* BIG_BOOT:                                              */
-/* Build a 1k bootloader, not 512 bytes. This turns on    */
-/* extra functionality.                                   */
-/*                                                        */
-/* BAUD_RATE:                                             */
-/* Set bootloader baud rate.                              */
-/*                                                        */
-/* LUDICROUS_SPEED:                                       */
-/* 230400 baud :-)                                        */
-/*                                                        */
-/* SOFT_UART:                                             */
-/* Use AVR305 soft-UART instead of hardware UART.         */
-/*                                                        */
-/* LED_START_FLASHES:                                     */
-/* Number of LED flashes on bootup.                       */
-/*                                                        */
-/* LED_DATA_FLASH:                                        */
-/* Flash LED when transferring data. For boards without   */
-/* TX or RX LEDs, or for people who like blinky lights.   */
-/*                                                        */
-/* SUPPORT_EEPROM:                                        */
-/* Support reading and writing from EEPROM. This is not   */
-/* used by Arduino, so off by default.                    */
-/*                                                        */
-/* TIMEOUT_MS:                                            */
-/* Bootloader timeout period, in milliseconds.            */
-/* 500,1000,2000,4000,8000 supported.                     */
-/*                                                        */
-/**********************************************************/
-
-/**********************************************************/
-/* Version Numbers!                                       */
-/*                                                        */
-/* Arduino Optiboot now includes this Version number in   */
-/* the source and object code.                            */
-/*                                                        */
-/* Version 3 was released as zip from the optiboot        */
-/*  repository and was distributed with Arduino 0022.     */
-/* Version 4 starts with the arduino repository commit    */
-/*  that brought the arduino repository up-to-date with   */
-/* the optiboot source tree changes since v3.             */
-/*                                                        */
-/**********************************************************/
-
-/**********************************************************/
-/* Edit History:					  */
-/*							  */
-/* 4.4 WestfW: add initialization of address to keep      */
-/*             the compiler happy.  Change SC'ed targets. */
-/*             Return the SW version via READ PARAM       */
-/* 4.3 WestfW: catch framing errors in getch(), so that   */
-/*             AVRISP works without HW kludges.           */
-/*  http://code.google.com/p/arduino/issues/detail?id=368n*/
-/* 4.2 WestfW: reduce code size, fix timeouts, change     */
-/*             verifySpace to use WDT instead of appstart */
-/* 4.1 WestfW: put version number in binary.		  */
 /**********************************************************/
 
 #define OPTIBOOT_MAJVER 4
@@ -406,37 +311,6 @@ int main(void) {
       address = newAddress;
       verifySpace();
     }
-	/* Change ZigBee address to respond to*/
-	//else if (ch == ZB_LOAD_ADDRESS)
-	//{
-	//	int i = 0;
-	//	for (; i < 8; i++)
-	//	{
-	//		xbeeAddress[i] = getpacket();
-	//	}
-
-	//	// recalculate frameSum
-	//	frameSum = 0;
-	//	frameSum += FRAME_TYPE;
-	//	frameSum += FRAME_ID;
-
-	//	// The 64-bit XBee address
-	//	for (i= 0; i < 8; i++)
-	//	{
-	//		frameSum += xbeeAddress[i];
-	//	}
-
-	//	// The 16 bit address
-	//	frameSum += XBEE_ADDR_16H;
-	//	frameSum += XBEE_ADDR_16L;
-	//	// The options byte
-	//	frameSum += BROADCAST_RADIUS;
-	//	// The options byte
-	//	frameSum += OPTIONS;
-
-	//	putpacket(frameSum);
-	//	ledhalt();
-	//}
     /* Write memory, length is big endian and is in bytes */
     else if(ch == STK_PROG_PAGE) {
       // PROGRAM PAGE - we support flash programming only, not EEPROM
@@ -547,7 +421,6 @@ int main(void) {
 #endif
 #endif
     }
-
     /* Get device signature bytes  */
     else if (ch == STK_LEAVE_PROGMODE) {
       // Adaboot no-wait mod
