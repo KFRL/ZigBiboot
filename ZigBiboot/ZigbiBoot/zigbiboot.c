@@ -126,9 +126,11 @@ uint8_t sendFailure();
 uint8_t getch(void);
 void getNpacket(uint8_t);
 uint8_t getpacket(void);
+uint8_t getCommand(void);
 void ledhalt();
 static inline void getNch(uint8_t); /* "static inline" is a compiler hint to reduce code size */
 void verifySpace();
+void verifySpacePacket();
 static inline void flash_led(uint8_t);
 uint8_t getLen();
 static inline void watchdogReset();
@@ -181,6 +183,9 @@ void appStart() __attribute__ ((naked));
 #ifdef XBEE
 // Command to change address of host ZigBee
 #define ZB_LOAD_ADDRESS 0x80
+#define PAYLOAD_MAX 72
+// Position of payload in RX packet after frame type
+#define PAYLOAD_POS 11
 
 // XBee information
 #define DELIMITER 126     // decimal for 0x7E
@@ -291,7 +296,7 @@ int main(void) {
   /* Forever loop */
   for (;;) {
     /* get character from UART */
-    ch = getpacket();
+    ch = getCommand();
 
 #ifdef XBEE_TEST
 	putpacket(ch);
@@ -301,8 +306,8 @@ int main(void) {
 	if(ch == STK_LOAD_ADDRESS) {
       // LOAD ADDRESS
       uint16_t newAddress;
-      newAddress = getpacket();
-      newAddress = (newAddress & 0xff) | (getpacket() << 8);
+      newAddress = getch();
+      newAddress = (newAddress & 0xff) | (getch() << 8);
 #ifdef RAMPZ
       // Transfer top bit to RAMPZ
       RAMPZ = (newAddress & 0x8000) ? 1 : 0;
@@ -310,12 +315,15 @@ int main(void) {
       newAddress += newAddress; // Convert from word address to byte address
       address = newAddress;
       verifySpace();
+	  getch();					// discard checksum
     }
     /* Write memory, length is big endian and is in bytes */
     else if(ch == STK_PROG_PAGE) {
       // PROGRAM PAGE - we support flash programming only, not EEPROM
       uint8_t *bufPtr;
       uint16_t addrPtr;
+
+	  getch();				// Discard checksum
 
       getpacket();			/* getlen() */
       length = getpacket();
@@ -338,7 +346,7 @@ int main(void) {
       if (address >= NRWWSTART) __boot_page_erase_short((uint16_t)(void*)address);
 
       // Read command terminator, start reply
-      verifySpace();
+      verifySpacePacket();
 
       // If only a partial page is to be programmed, the erase might not be complete.
       // So check that here
@@ -386,41 +394,41 @@ int main(void) {
 
     }
     /* Read memory block mode, length is big endian.  */
-    else if(ch == STK_READ_PAGE) {
-      // READ PAGE - we only read flash
-      getpacket();			/* getlen() */
-      length = getpacket();
-      getpacket();
-
-      verifySpace();
-#ifdef VIRTUAL_BOOT_PARTITION
-      do {
-        // Undo vector patch in bottom page so verify passes
-        if (address == 0)       ch=rstVect & 0xff;
-        else if (address == 1)  ch=rstVect >> 8;
-        else if (address == 8)  ch=wdtVect & 0xff;
-        else if (address == 9) ch=wdtVect >> 8;
-        else ch = pgm_read_byte_near(address);
-        address++;
-        putpacket(ch);
-      } while (--length);
-#else
-#ifdef __AVR_ATmega1280__
-//      do putch(pgm_read_byte_near(address++));
+//    else if(ch == STK_READ_PAGE) {
+//      // READ PAGE - we only read flash
+//      getpacket();			/* getlen() */
+//      length = getpacket();
+//      getpacket();
+//
+//      verifySpace();
+//#ifdef VIRTUAL_BOOT_PARTITION
+//      do {
+//        // Undo vector patch in bottom page so verify passes
+//        if (address == 0)       ch=rstVect & 0xff;
+//        else if (address == 1)  ch=rstVect >> 8;
+//        else if (address == 8)  ch=wdtVect & 0xff;
+//        else if (address == 9) ch=wdtVect >> 8;
+//        else ch = pgm_read_byte_near(address);
+//        address++;
+//        putpacket(ch);
+//      } while (--length);
+//#else
+//#ifdef __AVR_ATmega1280__
+////      do putch(pgm_read_byte_near(address++));
+////      while (--length);
+//      do {
+//        uint8_t result;
+//        __asm__ ("elpm %0,Z\n":"=r"(result):"z"(address));
+//        putpacket(result);
+//        address++;
+//      }
 //      while (--length);
-      do {
-        uint8_t result;
-        __asm__ ("elpm %0,Z\n":"=r"(result):"z"(address));
-        putpacket(result);
-        address++;
-      }
-      while (--length);
-#else
-      do putpacket(pgm_read_byte_near(address++));
-      while (--length);
-#endif
-#endif
-    }
+//#else
+//      do putpacket(pgm_read_byte_near(address++));
+//      while (--length);
+//#endif
+//#endif
+//    }
     /* Get device signature bytes  */
     else if (ch == STK_LEAVE_PROGMODE) {
       // Adaboot no-wait mod
@@ -436,6 +444,7 @@ int main(void) {
     else {
       // This covers the response to other commands
       verifySpace();
+	  getch();
     }
 #endif
     putpacket(STK_OK);
@@ -528,38 +537,46 @@ uint8_t sendFailure()
 #endif
 
 // A function to handle receiving XBee packets
-uint8_t getpacket(void)
+uint8_t getCommand(void)
 {
-  uint8_t ch =  getch();
+	uint8_t ch = getch();
 
 #ifdef XBEE
-  while (ch != 0x7E)
-	  ch = getch();
+	while (ch != 0x7E)
+		ch = getch();
 
-  getch();					// drop upper byte of length
-  uint8_t len = getch();	// store lower byte of length
-  ch = getch();				// frame id
-  
-  while (ch != 0x90)
-  {
-	  do getch();			// discard all bytes including checksum
-	  while (--len);
+	getch();					// drop upper byte of length
+	uint8_t len = getch();	// store lower byte of length
+	ch = getch();				// frame id
 
-	  getch();				// 0x7e
-	  getch();				// upper length
-	  len = getch();		// lower length
-	  ch = getch();			// frame id
-  }
+	while (ch != 0x90)
+	{
+		do getch();			// discard all bytes including checksum
+		while (--len);
 
-  do getch();			// discard all bytes including checksum
-  while (--len > 2);
+		getch();				// 0x7e
+		getch();				// upper length
+		len = getch();		// lower length
+		ch = getch();			// frame id
+	}
 
-  ch = getch();
+	uint8_t i = 0;
 
-  getch();
+	while (i++ < PAYLOAD_POS)
+		getch();				// discard all bytes until payload
+
+	ch = getch();				// get first byte of payload
 #endif
 
-  return ch;
+	return ch;
+}
+
+// A function to handle receiving XBee packets
+uint8_t getpacket(void)
+{
+	uint8_t ch = getCommand();
+	getch();
+	return ch;
 }
 
 uint8_t getch(void) {
@@ -655,13 +672,22 @@ void getNch(uint8_t count) {
 	verifySpace();
 }
 
-void verifySpace() {
+void verifySpacePacket() {
   if (getpacket() != CRC_EOP) {
     watchdogConfig(WATCHDOG_64MS);    // shorten WD timeout
     while (1)			      // and busy-loop so that WD causes
       ;				      //  a reset and app start.
   }
   putpacket(STK_INSYNC);
+}
+
+void verifySpace() {
+	if (getch() != CRC_EOP) {
+		watchdogConfig(WATCHDOG_64MS);    // shorten WD timeout
+		while (1)			      // and busy-loop so that WD causes
+			;				      //  a reset and app start.
+	}
+	putpacket(STK_INSYNC);
 }
 
 #if LED_START_FLASHES > 0
