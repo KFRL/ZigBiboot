@@ -7,22 +7,6 @@
 /* to program Arduino wirelessly through ZigBee           */
 /* networks.                                              */
 /*                                                        */
-/* Enhancements:                                          */
-/*   Fits in 512 bytes, saving 1.5K of code space         */
-/*   Background page erasing speeds up programming        */
-/*   Higher baud rate speeds up programming               */
-/*   Written almost entirely in C                         */
-/*   Customisable timeout with accurate timeconstant      */
-/*   Optional virtual UART. No hardware UART required.    */
-/*   Optional virtual boot partition for devices without. */
-/*                                                        */
-/* What you lose:                                         */
-/*   Implements a skeleton STK500 protocol which is       */
-/*   missing several features including EEPROM            */
-/*   programming and non-page-aligned writes              */
-/*   High baud rate breaks compatibility with standard    */
-/*   Arduino flash settings                               */
-/*                                                        */
 /* Fully supported:                                       */
 /*   ATmega328P based devices (Duemilanove etc)           */
 /*                                                        */
@@ -66,7 +50,6 @@ asm("  .section .version\n"
 // This saves cycles and program memory.
 #include "boot.h"
 
-
 // We don't use <avr/wdt.h> as those routines have interrupt overhead we don't need.
 
 #include "pin_defs.h"
@@ -74,10 +57,6 @@ asm("  .section .version\n"
 
 #ifndef LED_START_FLASHES
 #define LED_START_FLASHES 0
-#endif
-
-#ifdef LUDICROUS_SPEED
-#define BAUD_RATE 230400L
 #endif
 
 /* set the UART baud rate defaults */
@@ -124,13 +103,10 @@ void putch(char);
 void putpacket(char);
 uint8_t sendFailure();
 uint8_t getch(void);
-void getNpacket(uint8_t);
-uint8_t getpacket(void);
 uint8_t getCommand(void);
 void ledhalt();
 static inline void getNch(uint8_t); /* "static inline" is a compiler hint to reduce code size */
 void verifySpace();
-void verifySpacePacket();
 static inline void flash_led(uint8_t);
 uint8_t getLen();
 static inline void watchdogReset();
@@ -505,10 +481,6 @@ void putpacket(char cha)
 
 #ifdef XBEE
    putch(checksum);
-
-   // Until the acknowledgement packet results in success, keep 
-   // resending the packet
-   //while (sendFailure() > 0) putpacket(cha);
 #endif
 }
 
@@ -564,14 +536,6 @@ uint8_t getCommand(void)
 	ch = getch();				// get first byte of payload
 #endif
 
-	return ch;
-}
-
-// A function to handle receiving XBee packets
-uint8_t getpacket(void)
-{
-	uint8_t ch = getCommand();
-	getch();
 	return ch;
 }
 
@@ -658,23 +622,9 @@ void uartDelay() {
 }
 #endif
 
-void getNpacket(uint8_t count) {
-  do getpacket(); while (--count);
-  verifySpace();
-}
-
 void getNch(uint8_t count) {
 	do getch(); while (--count);
 	verifySpace();
-}
-
-void verifySpacePacket() {
-  if (getpacket() != CRC_EOP) {
-    watchdogConfig(WATCHDOG_64MS);    // shorten WD timeout
-    while (1)			      // and busy-loop so that WD causes
-      ;				      //  a reset and app start.
-  }
-  putpacket(STK_INSYNC);
 }
 
 void verifySpace() {
@@ -683,9 +633,9 @@ void verifySpace() {
 		while (1)			      // and busy-loop so that WD causes
 			;				      //  a reset and app start.
 	}
-
+#ifdef XBEE
 	getch();					  // Discard checksum
-
+#endif
 	putpacket(STK_INSYNC);
 }
 

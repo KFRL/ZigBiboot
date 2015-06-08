@@ -22,7 +22,6 @@ namespace Programmer
         static SerialPort ser;
         static string comPath = "COM7";
         static string defaultFilePath = "Blink.hex";
-        static bool xbeePackets = true;
 
         // Declaration STK of constants
         #region stk500
@@ -98,7 +97,6 @@ namespace Programmer
         static byte[] hostXBeeAddress64 = new byte[] { 0x00, 0x13, 0xA2, 0x00, 0x40, 0xAD, 0xBE, 0x87 };
         static byte[] targetXBeeAddress64 = new byte[] { 0x00, 0x13, 0xA2, 0x00, 0x40, 0xAD, 0xBE, 0xC7 };
         static byte[] xBeeAddress16 = new byte[] { 0xFF, 0xFE };
-        static byte frameSum = 123;  // Used to store the sum of all bytes before payload
 
         static List<byte[]> xbeeBuffer = new List<byte[]>();
         #endregion
@@ -112,15 +110,9 @@ namespace Programmer
             {
                 targetZigBeeAddressTextBox.Text += b.ToString("X2");
             }
-            foreach (byte b in hostXBeeAddress64)
-            {
-                hostZigBeeAddressTextBox.Text += b.ToString("X2");
-            }
 
             comPortComboBox.Text = comPath;
             fileNameBox.Text = defaultFilePath;
-
-            recalculateFrameSum();
         }
 
         private void browseBtn_Click(object sender, EventArgs e)
@@ -169,13 +161,11 @@ namespace Programmer
             try
             {
                 String targetAddress = targetZigBeeAddressTextBox.Text;
-                String hostAddress = hostZigBeeAddressTextBox.Text;
 
                 // TODO: add code to remove space characters from strings
 
                 // Checks for invalid addresses
-                if (targetAddress.Length != 16 ||
-                   hostAddress.Length != 16)
+                if (targetAddress.Length != 16)
                 {
                     throw new Exception("Invalid address length.");
                 }
@@ -186,13 +176,7 @@ namespace Programmer
                     // Target address
                     targetXBeeAddress64[j] = byte.Parse(targetAddress.Substring(idx, 2),
                         NumberStyles.HexNumber);
-
-                    // Host address
-                    hostXBeeAddress64[j] = byte.Parse(hostAddress.Substring(idx, 2),
-                        NumberStyles.HexNumber);
                 }
-
-                recalculateFrameSum();
             }
             catch(Exception exception)
             {
@@ -214,7 +198,6 @@ namespace Programmer
             {
                 Debug.Write(b.ToString("X2"));
             }
-            Debug.WriteLine("\nRecalculated frame sum: " + frameSum.ToString());
 #endif
 
         }
@@ -238,11 +221,7 @@ namespace Programmer
         static bool waitForBootloader(bool print = true)
         {
             byte[] data = getResponse(print).ToArray();
-
-            if (xbeePackets)
-                return (data[data.Length - 2] == 0x04);
-            else
-                return (data[0] == 0x04);
+            return (data[data.Length - 2] == 0x04);
         }
 
         /// <summary>
@@ -310,7 +289,7 @@ namespace Programmer
             // Enter Programming Mode
             byte[] buff = new byte[] { STK_ENTER_PROGMODE, CRC_EOP };
 
-            writeToPort(buff, xbeePackets);
+            writeToPort(buff);
 
             getResponse(print);
         }
@@ -325,7 +304,7 @@ namespace Programmer
             // Enter Programming Mode
             byte[] buff = new byte[] { STK_LEAVE_PROGMODE, CRC_EOP };
 
-            writeToPort(buff, xbeePackets);
+            writeToPort(buff);
 
             getResponse(print);
         }
@@ -392,30 +371,15 @@ namespace Programmer
         /// by using XBee API frames. The data array to be sent must be less than PAYLOAD_MAX constant.
         /// </summary>
         /// <param name="data">Byte array of max size PAYLOAD_MAX to write to the serial port</param>
-        /// <param name="xbee">Creates and sends XBee packets if set to true. Default is false.</param>
         /// <param name="print">Optionally prints data to Debug. Default is false.</param>
-        static void writeToPort(byte[] data, bool xbee = false, bool print = true)
+        static void writeToPort(byte[] data, bool print = true)
         {
             bool portClosed = !ser.IsOpen;
 
             if (portClosed) ser.Open();
-
-            if (xbee)
-            {
-                // Create a packet and transmit it
-                transmitPacket(createTXPacket(data));
-            }
-            else
-            {
-                ser.Write(data, 0, data.Length);
-                if (print)
-                {
-                    Debug.Write("Send:");
-                    for (int i = 0; i < data.Length; i++)
-                        Debug.Write(" " + data[i].ToString("X2"));
-                    Debug.WriteLine("");
-                }
-            }
+            
+            // Create a packet and transmit it
+            transmitPacket(createTXPacket(data));
 
             if (portClosed) ser.Close();
         }
@@ -496,7 +460,7 @@ namespace Programmer
         {
             List<byte> response = new List<byte>(); // A list that holds all the received data
             byte rByte = 0xFF;          // Holds a byte of data recieved from the board
-            long timer = (!xbeePackets) ? 2000000 : 5000000;       // Timer to stop app if nothing is received
+            long timer = 5000000;       // Timer to stop app if nothing is received
             bool dataInBuffer = false;
 
             // Check xbeeBuffer list for received responses
@@ -573,30 +537,16 @@ namespace Programmer
             waitForBootloader(print);
             enterProgrammingMode(print);
 
-            //// Command for the zigbee address
-            //byte[] addrCommand = new byte[10];
-            //addrCommand[0] = ZB_LOAD_ADDRESS;
-            //for (int i = 0; i < hostXBeeAddress64.Length; i++)
-            //{
-            //    addrCommand[i + 1] = hostXBeeAddress64[i];
-            //}
-            //addrCommand[9] = CRC_EOP;
-
-            //// Change the host ZigBee address
-            //writeToPort(addrCommand, xbeePackets, print);
-
-            //getResponse(print);
-
             // Program the flash memory
             for (int idx = 0; idx < addresses.Count; idx++)
             {
                 // Change the current address to write data to
-                writeToPort(addresses[idx], xbeePackets, print);
+                writeToPort(addresses[idx], print);
 
                 getResponse(print);
 
                 // Write the data to the flash memory
-                writeToPort(program[idx], xbeePackets, print);
+                writeToPort(program[idx], print);
 
                 getResponse(print);
             }
@@ -758,31 +708,6 @@ namespace Programmer
             readHexFile(fileNameBox.Text, ref programData, ref programAddresses);
             programBoard(programAddresses, programData);
 
-            //resetBoard();
-            //waitForBootloader();
-            //enterProgrammingMode();
-
-            //// A buffer to hold data being sent
-            ////byte[] buff = new byte[] { STK_GET_SYNC, CRC_EOP };
-            //byte[] buff = new byte[] { STK_PROG_PAGE, 0x00, 0xFF, 0x46, CRC_EOP };
-
-            //char ch = Debug.ReadKey(true).KeyChar;
-
-            //while (ch != 0x0d)
-            //{
-            //    //writeToPort(new byte[] { (byte) ch }, true);
-            //    writeToPort(buff, true);
-            //    getResponse();
-            //    ch = Debug.ReadKey(true).KeyChar;
-            //}
-
-            //leaveProgrammingMode();
-
-            //while (Debug.ReadKey(true).KeyChar == 0x0d)
-            //{
-            //    resetBoard();
-            //}
-
             if (ser.IsOpen) ser.Close();
         }
 
@@ -802,29 +727,6 @@ namespace Programmer
             }
 
             return (byte)(0xFF - sum);
-        }
-
-        private static void recalculateFrameSum()
-        {
-            // Recalculate frameSum
-            frameSum = 0;
-            frameSum += FRAME_TYPE;
-            frameSum += FRAME_ID;
-
-            // The 64-bit XBee address
-            foreach (byte b in targetXBeeAddress64)
-            {
-                frameSum += b;
-            }
-            // The 16-bit XBee address
-            foreach (byte b in xBeeAddress16)
-            {
-                frameSum += b;
-            }
-            // The options byte
-            frameSum += BROADCAST_RADIUS;
-            // The options byte
-            frameSum += OPTIONS;
         }
     }
 }

@@ -3,29 +3,29 @@ zigbiboot_atmega328.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .text         00000274  00007c00  00007c00  00000074  2**1
+  0 .text         00000246  00007c00  00007c00  00000074  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  1 .version      00000002  00007ffe  00007ffe  000002e8  2**0
+  1 .version      00000002  00007ffe  00007ffe  000002ba  2**0
                   CONTENTS, READONLY
-  2 .bss          00000009  00800100  00800100  000002e8  2**0
+  2 .bss          00000009  00800100  00800100  000002ba  2**0
                   ALLOC
-  3 .debug_aranges 00000028  00000000  00000000  000002ea  2**0
+  3 .debug_aranges 00000028  00000000  00000000  000002bc  2**0
                   CONTENTS, READONLY, DEBUGGING
-  4 .debug_pubnames 000000e8  00000000  00000000  00000312  2**0
+  4 .debug_pubnames 000000b5  00000000  00000000  000002e4  2**0
                   CONTENTS, READONLY, DEBUGGING
-  5 .debug_info   000003b4  00000000  00000000  000003fa  2**0
+  5 .debug_info   00000349  00000000  00000000  00000399  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_abbrev 000001c9  00000000  00000000  000007ae  2**0
+  6 .debug_abbrev 000001ba  00000000  00000000  000006e2  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_line   00000538  00000000  00000000  00000977  2**0
+  7 .debug_line   000004ce  00000000  00000000  0000089c  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_frame  000000e0  00000000  00000000  00000eb0  2**2
+  8 .debug_frame  000000b0  00000000  00000000  00000d6c  2**2
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_str    00000185  00000000  00000000  00000f90  2**0
+  9 .debug_str    0000015e  00000000  00000000  00000e1c  2**0
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_loc    00000281  00000000  00000000  00001115  2**0
+ 10 .debug_loc    00000250  00000000  00000000  00000f7a  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_ranges 000000a8  00000000  00000000  00001396  2**0
+ 11 .debug_ranges 00000090  00000000  00000000  000011ca  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -77,7 +77,7 @@ int main(void) {
     7c2a:	14 be       	out	0x34, r1	; 52
   if (!(ch & _BV(EXTRF))) appStart();
     7c2c:	81 ff       	sbrs	r24, 1
-    7c2e:	1d d1       	rcall	.+570    	; 0x7e6a <appStart>
+    7c2e:	06 d1       	rcall	.+524    	; 0x7e3c <appStart>
 
 #if LED_START_FLASHES > 0
   // Set up Timer 1 for timeout counter
@@ -108,7 +108,7 @@ int main(void) {
 #else
   watchdogConfig(WATCHDOG_2S);
     7c4e:	8f e0       	ldi	r24, 0x0F	; 15
-    7c50:	ed d0       	rcall	.+474    	; 0x7e2c <watchdogConfig>
+    7c50:	e6 d0       	rcall	.+460    	; 0x7e1e <watchdogConfig>
 #endif
   // For testing purposes
   // watchdogConfig(WATCHDOG_OFF);
@@ -295,7 +295,7 @@ void watchdogReset() {
 
       // Read command terminator, start reply
       verifySpace();
-    7ce0:	ab d0       	rcall	.+342    	; 0x7e38 <verifySpace>
+    7ce0:	a4 d0       	rcall	.+328    	; 0x7e2a <verifySpace>
 
       // If only a partial page is to be programmed, the erase might not be complete.
       // So check that here
@@ -387,13 +387,13 @@ int main(void) {
     	// Switch off watchdog timer when programming
     	watchdogConfig(WATCHDOG_OFF);
     7d38:	80 e0       	ldi	r24, 0x00	; 0
-    7d3a:	78 d0       	rcall	.+240    	; 0x7e2c <watchdogConfig>
+    7d3a:	71 d0       	rcall	.+226    	; 0x7e1e <watchdogConfig>
     	verifySpace();
     }
     else {
       // This covers the response to other commands
       verifySpace();
-    7d3c:	7d d0       	rcall	.+250    	; 0x7e38 <verifySpace>
+    7d3c:	76 d0       	rcall	.+236    	; 0x7e2a <verifySpace>
     }
 #endif
     putpacket(STK_OK);
@@ -506,10 +506,6 @@ void putpacket(char cha)
     7d9c:	81 2f       	mov	r24, r17
     7d9e:	80 95       	com	r24
     7da0:	d1 df       	rcall	.-94     	; 0x7d44 <putch>
-
-   // Until the acknowledgement packet results in success, keep 
-   // resending the packet
-   //while (sendFailure() > 0) putpacket(cha);
 #endif
 }
     7da2:	df 91       	pop	r29
@@ -635,167 +631,109 @@ uint8_t getCommand(void)
     7df0:	1f 91       	pop	r17
     7df2:	08 95       	ret
 
-00007df4 <getpacket>:
-
-// A function to handle receiving XBee packets
-uint8_t getpacket(void)
-{
-    7df4:	1f 93       	push	r17
-	uint8_t ch = getCommand();
-    7df6:	e6 df       	rcall	.-52     	; 0x7dc4 <getCommand>
-    7df8:	18 2f       	mov	r17, r24
-	getch();
-    7dfa:	d8 df       	rcall	.-80     	; 0x7dac <getch>
-	return ch;
-}
-    7dfc:	81 2f       	mov	r24, r17
-    7dfe:	1f 91       	pop	r17
-    7e00:	08 95       	ret
-
-00007e02 <sendFailure>:
+00007df4 <sendFailure>:
 }
 
 #ifdef XBEE
 // A function to ensure delivery status
 uint8_t sendFailure()
 {
-    7e02:	1f 93       	push	r17
+    7df4:	1f 93       	push	r17
 	uint8_t ch = getch();
-    7e04:	d3 df       	rcall	.-90     	; 0x7dac <getch>
+    7df6:	da df       	rcall	.-76     	; 0x7dac <getch>
 	getch();  // drop the higher byte of the length
-    7e06:	d2 df       	rcall	.-92     	; 0x7dac <getch>
+    7df8:	d9 df       	rcall	.-78     	; 0x7dac <getch>
 	uint8_t length = getch();
-    7e08:	d1 df       	rcall	.-94     	; 0x7dac <getch>
-    7e0a:	18 2f       	mov	r17, r24
+    7dfa:	d8 df       	rcall	.-80     	; 0x7dac <getch>
+    7dfc:	18 2f       	mov	r17, r24
 	do
 	{
 		getch();
-    7e0c:	cf df       	rcall	.-98     	; 0x7dac <getch>
+    7dfe:	d6 df       	rcall	.-84     	; 0x7dac <getch>
 	} while (--length != 2);
-    7e0e:	11 50       	subi	r17, 0x01	; 1
-    7e10:	12 30       	cpi	r17, 0x02	; 2
-    7e12:	e1 f7       	brne	.-8      	; 0x7e0c <sendFailure+0xa>
+    7e00:	11 50       	subi	r17, 0x01	; 1
+    7e02:	12 30       	cpi	r17, 0x02	; 2
+    7e04:	e1 f7       	brne	.-8      	; 0x7dfe <sendFailure+0xa>
 
 	ch = getch();
-    7e14:	cb df       	rcall	.-106    	; 0x7dac <getch>
-    7e16:	18 2f       	mov	r17, r24
+    7e06:	d2 df       	rcall	.-92     	; 0x7dac <getch>
+    7e08:	18 2f       	mov	r17, r24
 	getch();
-    7e18:	c9 df       	rcall	.-110    	; 0x7dac <getch>
+    7e0a:	d0 df       	rcall	.-96     	; 0x7dac <getch>
 	getch();
-    7e1a:	c8 df       	rcall	.-112    	; 0x7dac <getch>
+    7e0c:	cf df       	rcall	.-98     	; 0x7dac <getch>
 
 	return ch;
 }
-    7e1c:	81 2f       	mov	r24, r17
-    7e1e:	1f 91       	pop	r17
-    7e20:	08 95       	ret
+    7e0e:	81 2f       	mov	r24, r17
+    7e10:	1f 91       	pop	r17
+    7e12:	08 95       	ret
 
-00007e22 <ledhalt>:
+00007e14 <ledhalt>:
 }
 #endif
 
 void ledhalt()
 {
 	LED_PORT ^= _BV(LED);
-    7e22:	85 b1       	in	r24, 0x05	; 5
-    7e24:	90 e2       	ldi	r25, 0x20	; 32
-    7e26:	89 27       	eor	r24, r25
-    7e28:	85 b9       	out	0x05, r24	; 5
-    7e2a:	ff cf       	rjmp	.-2      	; 0x7e2a <ledhalt+0x8>
+    7e14:	85 b1       	in	r24, 0x05	; 5
+    7e16:	90 e2       	ldi	r25, 0x20	; 32
+    7e18:	89 27       	eor	r24, r25
+    7e1a:	85 b9       	out	0x05, r24	; 5
+    7e1c:	ff cf       	rjmp	.-2      	; 0x7e1c <ledhalt+0x8>
 
-00007e2c <watchdogConfig>:
+00007e1e <watchdogConfig>:
     "wdr\n"
   );
 }
 
 void watchdogConfig(uint8_t x) {
   WDTCSR = _BV(WDCE) | _BV(WDE);
-    7e2c:	e0 e6       	ldi	r30, 0x60	; 96
-    7e2e:	f0 e0       	ldi	r31, 0x00	; 0
-    7e30:	98 e1       	ldi	r25, 0x18	; 24
-    7e32:	90 83       	st	Z, r25
+    7e1e:	e0 e6       	ldi	r30, 0x60	; 96
+    7e20:	f0 e0       	ldi	r31, 0x00	; 0
+    7e22:	98 e1       	ldi	r25, 0x18	; 24
+    7e24:	90 83       	st	Z, r25
   WDTCSR = x;
-    7e34:	80 83       	st	Z, r24
+    7e26:	80 83       	st	Z, r24
 }
-    7e36:	08 95       	ret
+    7e28:	08 95       	ret
 
-00007e38 <verifySpace>:
-  }
-  putpacket(STK_INSYNC);
-}
-
-void verifySpace() {
-	if (getch() != CRC_EOP) {
-    7e38:	b9 df       	rcall	.-142    	; 0x7dac <getch>
-    7e3a:	80 32       	cpi	r24, 0x20	; 32
-    7e3c:	19 f0       	breq	.+6      	; 0x7e44 <verifySpace+0xc>
-		watchdogConfig(WATCHDOG_64MS);    // shorten WD timeout
-    7e3e:	8a e0       	ldi	r24, 0x0A	; 10
-    7e40:	f5 df       	rcall	.-22     	; 0x7e2c <watchdogConfig>
-    7e42:	ff cf       	rjmp	.-2      	; 0x7e42 <verifySpace+0xa>
-		while (1)			      // and busy-loop so that WD causes
-			;				      //  a reset and app start.
-	}
-
-	getch();					  // Discard checksum
-    7e44:	b3 df       	rcall	.-154    	; 0x7dac <getch>
-
-	putpacket(STK_INSYNC);
-    7e46:	84 e1       	ldi	r24, 0x14	; 20
-}
-    7e48:	85 cf       	rjmp	.-246    	; 0x7d54 <putpacket>
-
-00007e4a <getNpacket>:
-    ::[count] "M" (UART_B_VALUE)
-  );
-}
-#endif
-
-void getNpacket(uint8_t count) {
-    7e4a:	1f 93       	push	r17
-    7e4c:	18 2f       	mov	r17, r24
-  do getpacket(); while (--count);
-    7e4e:	d2 df       	rcall	.-92     	; 0x7df4 <getpacket>
-    7e50:	11 50       	subi	r17, 0x01	; 1
-    7e52:	e9 f7       	brne	.-6      	; 0x7e4e <getNpacket+0x4>
-  verifySpace();
-    7e54:	f1 df       	rcall	.-30     	; 0x7e38 <verifySpace>
-}
-    7e56:	1f 91       	pop	r17
-    7e58:	08 95       	ret
-
-00007e5a <verifySpacePacket>:
+00007e2a <verifySpace>:
 	do getch(); while (--count);
 	verifySpace();
 }
 
-void verifySpacePacket() {
-  if (getpacket() != CRC_EOP) {
-    7e5a:	cc df       	rcall	.-104    	; 0x7df4 <getpacket>
-    7e5c:	80 32       	cpi	r24, 0x20	; 32
-    7e5e:	19 f0       	breq	.+6      	; 0x7e66 <verifySpacePacket+0xc>
-    watchdogConfig(WATCHDOG_64MS);    // shorten WD timeout
-    7e60:	8a e0       	ldi	r24, 0x0A	; 10
-    7e62:	e4 df       	rcall	.-56     	; 0x7e2c <watchdogConfig>
-    7e64:	ff cf       	rjmp	.-2      	; 0x7e64 <verifySpacePacket+0xa>
-    while (1)			      // and busy-loop so that WD causes
-      ;				      //  a reset and app start.
-  }
-  putpacket(STK_INSYNC);
-    7e66:	84 e1       	ldi	r24, 0x14	; 20
+void verifySpace() {
+	if (getch() != CRC_EOP) {
+    7e2a:	c0 df       	rcall	.-128    	; 0x7dac <getch>
+    7e2c:	80 32       	cpi	r24, 0x20	; 32
+    7e2e:	19 f0       	breq	.+6      	; 0x7e36 <verifySpace+0xc>
+		watchdogConfig(WATCHDOG_64MS);    // shorten WD timeout
+    7e30:	8a e0       	ldi	r24, 0x0A	; 10
+    7e32:	f5 df       	rcall	.-22     	; 0x7e1e <watchdogConfig>
+    7e34:	ff cf       	rjmp	.-2      	; 0x7e34 <verifySpace+0xa>
+		while (1)			      // and busy-loop so that WD causes
+			;				      //  a reset and app start.
+	}
+#ifdef XBEE
+	getch();					  // Discard checksum
+    7e36:	ba df       	rcall	.-140    	; 0x7dac <getch>
+#endif
+	putpacket(STK_INSYNC);
+    7e38:	84 e1       	ldi	r24, 0x14	; 20
 }
-    7e68:	75 cf       	rjmp	.-278    	; 0x7d54 <putpacket>
+    7e3a:	8c cf       	rjmp	.-232    	; 0x7d54 <putpacket>
 
-00007e6a <appStart>:
+00007e3c <appStart>:
   WDTCSR = _BV(WDCE) | _BV(WDE);
   WDTCSR = x;
 }
 
 void appStart() {
   watchdogConfig(WATCHDOG_OFF);
-    7e6a:	80 e0       	ldi	r24, 0x00	; 0
-    7e6c:	df df       	rcall	.-66     	; 0x7e2c <watchdogConfig>
+    7e3c:	80 e0       	ldi	r24, 0x00	; 0
+    7e3e:	ef df       	rcall	.-34     	; 0x7e1e <watchdogConfig>
   __asm__ __volatile__ (
-    7e6e:	ee 27       	eor	r30, r30
-    7e70:	ff 27       	eor	r31, r31
-    7e72:	09 94       	ijmp
+    7e40:	ee 27       	eor	r30, r30
+    7e42:	ff 27       	eor	r31, r31
+    7e44:	09 94       	ijmp
