@@ -315,7 +315,6 @@ int main(void) {
       newAddress += newAddress; // Convert from word address to byte address
       address = newAddress;
       verifySpace();
-	  getch();					// discard checksum
     }
     /* Write memory, length is big endian and is in bytes */
     else if(ch == STK_PROG_PAGE) {
@@ -323,11 +322,9 @@ int main(void) {
       uint8_t *bufPtr;
       uint16_t addrPtr;
 
-	  getch();				// Discard checksum
-
-      getpacket();			/* getlen() */
-      length = getpacket();
-      getpacket();
+	  getch();			/* getlen() */
+	  length = getch();
+	  getch();
 
       // If we are in RWW section, immediately start page erase
       if (address < NRWWSTART) __boot_page_erase_short((uint16_t)(void*)address);
@@ -336,7 +333,7 @@ int main(void) {
       bufPtr = buff;
 	  do
 	  {
-		  ch = getpacket();
+		  ch = getch();
 		  *bufPtr++ = ch;
 	  }
       while (--length);
@@ -346,7 +343,7 @@ int main(void) {
       if (address >= NRWWSTART) __boot_page_erase_short((uint16_t)(void*)address);
 
       // Read command terminator, start reply
-      verifySpacePacket();
+      verifySpace();
 
       // If only a partial page is to be programmed, the erase might not be complete.
       // So check that here
@@ -444,7 +441,6 @@ int main(void) {
     else {
       // This covers the response to other commands
       verifySpace();
-	  getch();
     }
 #endif
     putpacket(STK_OK);
@@ -687,6 +683,9 @@ void verifySpace() {
 		while (1)			      // and busy-loop so that WD causes
 			;				      //  a reset and app start.
 	}
+
+	getch();					  // Discard checksum
+
 	putpacket(STK_INSYNC);
 }
 

@@ -72,7 +72,6 @@ namespace Programmer
         // XBee Constants
         #region XBee
         const byte ZB_LOAD_ADDRESS = 0x80;
-        const byte PAYLOAD_MAX = 72;    // Max number of bytes in payload
 
         const byte DELIMITER = 126;     // decimal for 0x7E
         const byte LENGTH_UPPER = 0;    // decimal for 0x00
@@ -403,26 +402,8 @@ namespace Programmer
 
             if (xbee)
             {
-                if (data.Length > PAYLOAD_MAX)
-                {
-                    List<byte> dataList = data.ToList();
-
-                    for (int idx = 0; idx < dataList.Count; idx += PAYLOAD_MAX)
-                    {
-                        int count = (idx + PAYLOAD_MAX > dataList.Count) ?
-                            (dataList.Count - idx) : PAYLOAD_MAX - 1;
-
-                        // Create a packet and transmit it
-                        transmitPacket(
-                            createTXPacket(dataList.GetRange(idx, count).ToArray())
-                            );
-                    }
-                }
-                else
-                {
-                    // Create a packet and transmit it
-                    transmitPacket(createTXPacket(data));
-                }
+                // Create a packet and transmit it
+                transmitPacket(createTXPacket(data));
             }
             else
             {
@@ -615,10 +596,7 @@ namespace Programmer
                 getResponse(print);
 
                 // Write the data to the flash memory
-                foreach (byte b in program[idx])
-                {
-                    writeToPort(new byte[] { b }, xbeePackets, print);
-                }
+                writeToPort(program[idx], xbeePackets, print);
 
                 getResponse(print);
             }
