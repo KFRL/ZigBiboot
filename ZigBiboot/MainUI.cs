@@ -20,7 +20,7 @@ namespace Programmer
     public partial class MainUI : Form
     {
         static SerialPort ser;
-        static string comPath = "COM7";
+        static string comPath = "COM21";
         static string defaultFilePath = "Blink.hex";
 
         // Declaration STK of constants
@@ -94,8 +94,7 @@ namespace Programmer
         // XBee variables
         #region Xbee_Vars
         static byte[] frameHeader = new byte[] { DELIMITER, LENGTH_UPPER, LENGTH_LOWER, FRAME_TYPE, FRAME_ID };
-        static byte[] hostXBeeAddress64 = new byte[] { 0x00, 0x13, 0xA2, 0x00, 0x40, 0xAD, 0xBE, 0x87 };
-        static byte[] targetXBeeAddress64 = new byte[] { 0x00, 0x13, 0xA2, 0x00, 0x40, 0xAD, 0xBE, 0xC7 };
+        static byte[] targetXBeeAddress64 = new byte[] { 0x00, 0x13, 0xA2, 0x00, 0x40, 0xc1, 0xa5, 0x94 };
         static byte[] xBeeAddress16 = new byte[] { 0xFF, 0xFE };
 
         static List<byte[]> xbeeBuffer = new List<byte[]>();
@@ -188,11 +187,6 @@ namespace Programmer
             }
 
 #if DEBUG
-            Debug.Write("Host Address: ");
-            foreach (byte b in hostXBeeAddress64)
-            {
-                Debug.Write(b.ToString("X2"));
-            }
             Debug.Write("\nTarget Address: ");
             foreach (byte b in targetXBeeAddress64)
             {
@@ -451,6 +445,7 @@ namespace Programmer
 
             return packet;
         }
+
         /// <summary>
         /// Gets response from the board and displays it
         /// </summary>
