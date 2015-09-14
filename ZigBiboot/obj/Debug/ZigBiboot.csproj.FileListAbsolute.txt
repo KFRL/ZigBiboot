@@ -28,3 +28,13 @@ C:\Users\Inshal\Documents\GitHub\Zigbiboot\ZigBiboot\bin\Debug\Blank.hex
 C:\Users\Inshal\Documents\GitHub\Zigbiboot\ZigBiboot\bin\Debug\Blink.hex
 C:\Users\Inshal\Documents\GitHub\Zigbiboot\ZigBiboot\bin\Debug\ZigBiboot.exe
 C:\Users\Inshal\Documents\GitHub\Zigbiboot\ZigBiboot\bin\Debug\ZigBiboot.pdb
+C:\Users\insha\Documents\Github\Zigbiboot\ZigBiboot\obj\Debug\ZigBiboot.exe
+C:\Users\insha\Documents\Github\Zigbiboot\ZigBiboot\obj\Debug\ZigBiboot.pdb
+C:\Users\insha\Documents\Github\Zigbiboot\ZigBiboot\bin\Debug\Blank.hex
+C:\Users\insha\Documents\Github\Zigbiboot\ZigBiboot\bin\Debug\Blink.hex
+C:\Users\insha\Documents\Github\Zigbiboot\ZigBiboot\bin\Debug\ZigBiboot.exe
+C:\Users\insha\Documents\Github\Zigbiboot\ZigBiboot\bin\Debug\ZigBiboot.pdb
+C:\Users\insha\Documents\Github\Zigbiboot\ZigBiboot\obj\Debug\ZigBiboot.csprojResolveAssemblyReference.cache
+C:\Users\insha\Documents\Github\Zigbiboot\ZigBiboot\obj\Debug\Programmer.MainUI.resources
+C:\Users\insha\Documents\Github\Zigbiboot\ZigBiboot\obj\Debug\ZigBiboot.Properties.Resources.resources
+C:\Users\insha\Documents\Github\Zigbiboot\ZigBiboot\obj\Debug\ZigBiboot.csproj.GenerateResource.Cache

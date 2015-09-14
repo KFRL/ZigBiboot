@@ -37,7 +37,6 @@
             this.comPortLabel = new System.Windows.Forms.Label();
             this.targetZigBeeAddressLbl = new System.Windows.Forms.Label();
             this.targetZigBeeAddressTextBox = new System.Windows.Forms.TextBox();
-            this.updateAddressesBtn = new System.Windows.Forms.Button();
             this.backgroundWorker = new System.ComponentModel.BackgroundWorker();
             this.SuspendLayout();
             // 
@@ -52,7 +51,7 @@
             // 
             this.browseBtn.Location = new System.Drawing.Point(177, 42);
             this.browseBtn.Name = "browseBtn";
-            this.browseBtn.Size = new System.Drawing.Size(75, 20);
+            this.browseBtn.Size = new System.Drawing.Size(75, 21);
             this.browseBtn.TabIndex = 1;
             this.browseBtn.Text = "Browse";
             this.browseBtn.UseVisualStyleBackColor = true;
@@ -74,7 +73,7 @@
             // 
             // UploadBtn
             // 
-            this.UploadBtn.Location = new System.Drawing.Point(87, 170);
+            this.UploadBtn.Location = new System.Drawing.Point(81, 160);
             this.UploadBtn.Name = "UploadBtn";
             this.UploadBtn.Size = new System.Drawing.Size(112, 42);
             this.UploadBtn.TabIndex = 3;
@@ -87,7 +86,7 @@
             this.comPortComboBox.FormattingEnabled = true;
             this.comPortComboBox.Location = new System.Drawing.Point(25, 84);
             this.comPortComboBox.Name = "comPortComboBox";
-            this.comPortComboBox.Size = new System.Drawing.Size(121, 21);
+            this.comPortComboBox.Size = new System.Drawing.Size(146, 21);
             this.comPortComboBox.TabIndex = 4;
             this.comPortComboBox.SelectedIndexChanged += new System.EventHandler(this.comPortComboBox_SelectedIndexChanged);
             this.comPortComboBox.Click += new System.EventHandler(this.comPortComboBox_Click);
@@ -117,16 +116,7 @@
             this.targetZigBeeAddressTextBox.Size = new System.Drawing.Size(146, 20);
             this.targetZigBeeAddressTextBox.TabIndex = 9;
             this.targetZigBeeAddressTextBox.WordWrap = false;
-            // 
-            // updateAddressesBtn
-            // 
-            this.updateAddressesBtn.Location = new System.Drawing.Point(177, 108);
-            this.updateAddressesBtn.Name = "updateAddressesBtn";
-            this.updateAddressesBtn.Size = new System.Drawing.Size(87, 37);
-            this.updateAddressesBtn.TabIndex = 10;
-            this.updateAddressesBtn.Text = "Update Addresses";
-            this.updateAddressesBtn.UseVisualStyleBackColor = true;
-            this.updateAddressesBtn.Click += new System.EventHandler(this.updateAddressesBtn_Click);
+            this.targetZigBeeAddressTextBox.Leave += new System.EventHandler(this.targetZigBeeAddressTextBox_Leave);
             // 
             // backgroundWorker
             // 
@@ -137,8 +127,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(289, 239);
-            this.Controls.Add(this.updateAddressesBtn);
+            this.ClientSize = new System.Drawing.Size(274, 225);
             this.Controls.Add(this.targetZigBeeAddressTextBox);
             this.Controls.Add(this.targetZigBeeAddressLbl);
             this.Controls.Add(this.comPortLabel);
@@ -165,7 +154,6 @@
         private System.Windows.Forms.ComboBox comPortComboBox;
         private System.Windows.Forms.Label targetZigBeeAddressLbl;
         private System.Windows.Forms.TextBox targetZigBeeAddressTextBox;
-        private System.Windows.Forms.Button updateAddressesBtn;
         private System.ComponentModel.BackgroundWorker backgroundWorker;
     }
 }

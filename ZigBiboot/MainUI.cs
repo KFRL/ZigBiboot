@@ -155,47 +155,6 @@ namespace Programmer
 #endif
         }
 
-        private void updateAddressesBtn_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                String targetAddress = targetZigBeeAddressTextBox.Text;
-
-                // TODO: add code to remove space characters from strings
-
-                // Checks for invalid addresses
-                if (targetAddress.Length != 16)
-                {
-                    throw new Exception("Invalid address length.");
-                }
-
-                // Parse addresses from strings
-                for (int idx = 0, j = 0; idx < 16; idx += 2, j++)
-                {
-                    // Target address
-                    targetXBeeAddress64[j] = byte.Parse(targetAddress.Substring(idx, 2),
-                        NumberStyles.HexNumber);
-                }
-            }
-            catch(Exception exception)
-            {
-                MessageBox.Show(exception.Message,
-                        "Exception", MessageBoxButtons.OK);
-#if DEBUG
-                Debug.WriteLine(exception.Message);
-#endif
-            }
-
-#if DEBUG
-            Debug.Write("\nTarget Address: ");
-            foreach (byte b in targetXBeeAddress64)
-            {
-                Debug.Write(b.ToString("X2"));
-            }
-#endif
-
-        }
-
         private void UploadBtn_Click(object sender, EventArgs e)
         {
             if (!backgroundWorker.IsBusy)
@@ -722,6 +681,46 @@ namespace Programmer
             }
 
             return (byte)(0xFF - sum);
+        }
+
+        private void targetZigBeeAddressTextBox_Leave(object sender, EventArgs e)
+        {
+            try
+            {
+                String targetAddress = targetZigBeeAddressTextBox.Text;
+
+                // TODO: add code to remove space characters from strings
+
+                // Checks for invalid addresses
+                if (targetAddress.Length != 16)
+                {
+                    throw new Exception("Invalid address length.");
+                }
+
+                // Parse addresses from strings
+                for (int idx = 0, j = 0; idx < 16; idx += 2, j++)
+                {
+                    // Target address
+                    targetXBeeAddress64[j] = byte.Parse(targetAddress.Substring(idx, 2),
+                        NumberStyles.HexNumber);
+                }
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message,
+                        "Exception", MessageBoxButtons.OK);
+#if DEBUG
+                Debug.WriteLine(exception.Message);
+#endif
+            }
+
+#if DEBUG
+            Debug.Write("\nTarget Address: ");
+            foreach (byte b in targetXBeeAddress64)
+            {
+                Debug.Write(b.ToString("X2"));
+            }
+#endif
         }
     }
 }
