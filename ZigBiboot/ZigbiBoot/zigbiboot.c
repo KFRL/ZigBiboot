@@ -179,6 +179,8 @@ void appStart() __attribute__ ((naked));
 #endif
 
 #ifdef XBEE
+#define RESET_MESSAGE 0x04
+
 // Command to change address of host ZigBee
 #define ZB_LOAD_ADDRESS 0x80
 
@@ -286,7 +288,7 @@ int main(void) {
   flash_led(LED_START_FLASHES * 2);
 #endif
 
-  putpacket(0x04);
+  putpacket(RESET_MESSAGE);
   
   /* Forever loop */
   for (;;) {

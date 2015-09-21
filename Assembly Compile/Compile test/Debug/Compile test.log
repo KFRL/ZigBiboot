@@ -1,0 +1,22 @@
+﻿Build started 12/08/2015 23:52:00.
+     1>Project "C:\Users\Inshal\Documents\GitHub\ZigBiboot\Assembly Compile\Compile test\Compile test.vcxproj" on node 2 (Build target(s)).
+     1>_MASM:
+         Assembling Test.asm...
+         cmd.exe /C "C:\Users\Inshal\AppData\Local\Temp\tmp1637d033b93c4ab69ed6560e28bd1242.cmd"
+         ml.exe /c /nologo /Zi /Fo"Debug\Test.obj" /W3 /errorReport:prompt  /TaTest.asm
+     1>Test.asm(4): error A2008: syntax error : /
+     1>Test.asm(5): error A2008: syntax error : /
+     1>Test.asm(6): error A2008: syntax error : /
+     1>Test.asm(7): error A2008: syntax error : /
+     1>Test.asm(10): error A2008: syntax error : /
+     1>Test.asm(11): error A2008: syntax error : /
+     1>Test.asm(12): error A2008: syntax error : /
+     1>Test.asm(15): error A2008: syntax error : /
+     1>Test.asm(18): error A2008: syntax error : /
+     1>Test.asm(23): error A2008: syntax error : /
+     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\BuildCustomizations\masm.targets(50,5): error MSB3721: The command "ml.exe /c /nologo /Zi /Fo"Debug\Test.obj" /W3 /errorReport:prompt  /TaTest.asm" exited with code 1.
+     1>Done Building Project "C:\Users\Inshal\Documents\GitHub\ZigBiboot\Assembly Compile\Compile test\Compile test.vcxproj" (Build target(s)) -- FAILED.
+
+Build FAILED.
+
+Time Elapsed 00:00:03.23
