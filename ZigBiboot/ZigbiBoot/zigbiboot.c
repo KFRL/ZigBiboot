@@ -7,22 +7,6 @@
 /* to program Arduino wirelessly through ZigBee           */
 /* networks.                                              */
 /*                                                        */
-/* Enhancements:                                          */
-/*   Fits in 512 bytes, saving 1.5K of code space         */
-/*   Background page erasing speeds up programming        */
-/*   Higher baud rate speeds up programming               */
-/*   Written almost entirely in C                         */
-/*   Customisable timeout with accurate timeconstant      */
-/*   Optional virtual UART. No hardware UART required.    */
-/*   Optional virtual boot partition for devices without. */
-/*                                                        */
-/* What you lose:                                         */
-/*   Implements a skeleton STK500 protocol which is       */
-/*   missing several features including EEPROM            */
-/*   programming and non-page-aligned writes              */
-/*   High baud rate breaks compatibility with standard    */
-/*   Arduino flash settings                               */
-/*                                                        */
 /* Fully supported:                                       */
 /*   ATmega328P based devices (Duemilanove etc)           */
 /*                                                        */
@@ -66,7 +50,6 @@ asm("  .section .version\n"
 // This saves cycles and program memory.
 #include "boot.h"
 
-
 // We don't use <avr/wdt.h> as those routines have interrupt overhead we don't need.
 
 #include "pin_defs.h"
@@ -74,10 +57,6 @@ asm("  .section .version\n"
 
 #ifndef LED_START_FLASHES
 #define LED_START_FLASHES 0
-#endif
-
-#ifdef LUDICROUS_SPEED
-#define BAUD_RATE 230400L
 #endif
 
 /* set the UART baud rate defaults */
@@ -124,8 +103,7 @@ void putch(char);
 void putpacket(char);
 uint8_t sendFailure();
 uint8_t getch(void);
-void getNpacket(uint8_t);
-uint8_t getpacket(void);
+uint8_t getCommand(void);
 void ledhalt();
 static inline void getNch(uint8_t); /* "static inline" is a compiler hint to reduce code size */
 void verifySpace();
@@ -183,6 +161,9 @@ void appStart() __attribute__ ((naked));
 
 // Command to change address of host ZigBee
 #define ZB_LOAD_ADDRESS 0x80
+#define PAYLOAD_MAX 72
+// Position of payload in RX packet after frame type
+#define PAYLOAD_POS 11
 
 // XBee information
 #define DELIMITER 126     // decimal for 0x7E
@@ -293,7 +274,7 @@ int main(void) {
   /* Forever loop */
   for (;;) {
     /* get character from UART */
-    ch = getpacket();
+    ch = getCommand();
 
 #ifdef XBEE_TEST
 	putpacket(ch);
@@ -303,8 +284,8 @@ int main(void) {
 	if(ch == STK_LOAD_ADDRESS) {
       // LOAD ADDRESS
       uint16_t newAddress;
-      newAddress = getpacket();
-      newAddress = (newAddress & 0xff) | (getpacket() << 8);
+      newAddress = getch();
+      newAddress = (newAddress & 0xff) | (getch() << 8);
 #ifdef RAMPZ
       // Transfer top bit to RAMPZ
       RAMPZ = (newAddress & 0x8000) ? 1 : 0;
@@ -319,9 +300,9 @@ int main(void) {
       uint8_t *bufPtr;
       uint16_t addrPtr;
 
-      getpacket();			/* getlen() */
-      length = getpacket();
-      getpacket();
+	  getch();			/* getlen() */
+	  length = getch();
+	  getch();
 
       // If we are in RWW section, immediately start page erase
       if (address < NRWWSTART) __boot_page_erase_short((uint16_t)(void*)address);
@@ -330,7 +311,7 @@ int main(void) {
       bufPtr = buff;
 	  do
 	  {
-		  ch = getpacket();
+		  ch = getch();
 		  *bufPtr++ = ch;
 	  }
       while (--length);
@@ -388,41 +369,41 @@ int main(void) {
 
     }
     /* Read memory block mode, length is big endian.  */
-    else if(ch == STK_READ_PAGE) {
-      // READ PAGE - we only read flash
-      getpacket();			/* getlen() */
-      length = getpacket();
-      getpacket();
-
-      verifySpace();
-#ifdef VIRTUAL_BOOT_PARTITION
-      do {
-        // Undo vector patch in bottom page so verify passes
-        if (address == 0)       ch=rstVect & 0xff;
-        else if (address == 1)  ch=rstVect >> 8;
-        else if (address == 8)  ch=wdtVect & 0xff;
-        else if (address == 9) ch=wdtVect >> 8;
-        else ch = pgm_read_byte_near(address);
-        address++;
-        putpacket(ch);
-      } while (--length);
-#else
-#ifdef __AVR_ATmega1280__
-//      do putch(pgm_read_byte_near(address++));
+//    else if(ch == STK_READ_PAGE) {
+//      // READ PAGE - we only read flash
+//      getpacket();			/* getlen() */
+//      length = getpacket();
+//      getpacket();
+//
+//      verifySpace();
+//#ifdef VIRTUAL_BOOT_PARTITION
+//      do {
+//        // Undo vector patch in bottom page so verify passes
+//        if (address == 0)       ch=rstVect & 0xff;
+//        else if (address == 1)  ch=rstVect >> 8;
+//        else if (address == 8)  ch=wdtVect & 0xff;
+//        else if (address == 9) ch=wdtVect >> 8;
+//        else ch = pgm_read_byte_near(address);
+//        address++;
+//        putpacket(ch);
+//      } while (--length);
+//#else
+//#ifdef __AVR_ATmega1280__
+////      do putch(pgm_read_byte_near(address++));
+////      while (--length);
+//      do {
+//        uint8_t result;
+//        __asm__ ("elpm %0,Z\n":"=r"(result):"z"(address));
+//        putpacket(result);
+//        address++;
+//      }
 //      while (--length);
-      do {
-        uint8_t result;
-        __asm__ ("elpm %0,Z\n":"=r"(result):"z"(address));
-        putpacket(result);
-        address++;
-      }
-      while (--length);
-#else
-      do putpacket(pgm_read_byte_near(address++));
-      while (--length);
-#endif
-#endif
-    }
+//#else
+//      do putpacket(pgm_read_byte_near(address++));
+//      while (--length);
+//#endif
+//#endif
+//    }
     /* Get device signature bytes  */
     else if (ch == STK_LEAVE_PROGMODE) {
       // Adaboot no-wait mod
@@ -502,10 +483,6 @@ void putpacket(char cha)
 
 #ifdef XBEE
    putch(checksum);
-
-   // Until the acknowledgement packet results in success, keep 
-   // resending the packet
-   //while (sendFailure() > 0) putpacket(cha);
 #endif
 }
 
@@ -530,38 +507,38 @@ uint8_t sendFailure()
 #endif
 
 // A function to handle receiving XBee packets
-uint8_t getpacket(void)
+uint8_t getCommand(void)
 {
-  uint8_t ch =  getch();
+	uint8_t ch = getch();
 
 #ifdef XBEE
-  while (ch != 0x7E)
-	  ch = getch();
+	while (ch != 0x7E)
+		ch = getch();
 
-  getch();					// drop upper byte of length
-  uint8_t len = getch();	// store lower byte of length
-  ch = getch();				// frame id
-  
-  while (ch != 0x90)
-  {
-	  do getch();			// discard all bytes including checksum
-	  while (--len);
+	getch();					// drop upper byte of length
+	uint8_t len = getch();	// store lower byte of length
+	ch = getch();				// frame id
 
-	  getch();				// 0x7e
-	  getch();				// upper length
-	  len = getch();		// lower length
-	  ch = getch();			// frame id
-  }
+	while (ch != 0x90)
+	{
+		do getch();			// discard all bytes including checksum
+		while (--len);
 
-  do getch();			// discard all bytes including checksum
-  while (--len > 2);
+		getch();				// 0x7e
+		getch();				// upper length
+		len = getch();		// lower length
+		ch = getch();			// frame id
+	}
 
-  ch = getch();
+	uint8_t i = 0;
 
-  getch();
+	while (i++ < PAYLOAD_POS)
+		getch();				// discard all bytes until payload
+
+	ch = getch();				// get first byte of payload
 #endif
 
-  return ch;
+	return ch;
 }
 
 uint8_t getch(void) {
@@ -647,23 +624,21 @@ void uartDelay() {
 }
 #endif
 
-void getNpacket(uint8_t count) {
-  do getpacket(); while (--count);
-  verifySpace();
-}
-
 void getNch(uint8_t count) {
 	do getch(); while (--count);
 	verifySpace();
 }
 
 void verifySpace() {
-  if (getpacket() != CRC_EOP) {
-    watchdogConfig(WATCHDOG_64MS);    // shorten WD timeout
-    while (1)			      // and busy-loop so that WD causes
-      ;				      //  a reset and app start.
-  }
-  putpacket(STK_INSYNC);
+	if (getch() != CRC_EOP) {
+		watchdogConfig(WATCHDOG_64MS);    // shorten WD timeout
+		while (1)			      // and busy-loop so that WD causes
+			;				      //  a reset and app start.
+	}
+#ifdef XBEE
+	getch();					  // Discard checksum
+#endif
+	putpacket(STK_INSYNC);
 }
 
 #if LED_START_FLASHES > 0

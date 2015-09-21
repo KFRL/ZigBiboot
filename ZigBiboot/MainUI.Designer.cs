@@ -35,11 +35,8 @@
             this.UploadBtn = new System.Windows.Forms.Button();
             this.comPortComboBox = new System.Windows.Forms.ComboBox();
             this.comPortLabel = new System.Windows.Forms.Label();
-            this.hostZigBeeAddressLbl = new System.Windows.Forms.Label();
-            this.hostZigBeeAddressTextBox = new System.Windows.Forms.TextBox();
             this.targetZigBeeAddressLbl = new System.Windows.Forms.Label();
             this.targetZigBeeAddressTextBox = new System.Windows.Forms.TextBox();
-            this.updateAddressesBtn = new System.Windows.Forms.Button();
             this.backgroundWorker = new System.ComponentModel.BackgroundWorker();
             this.SuspendLayout();
             // 
@@ -54,7 +51,7 @@
             // 
             this.browseBtn.Location = new System.Drawing.Point(177, 42);
             this.browseBtn.Name = "browseBtn";
-            this.browseBtn.Size = new System.Drawing.Size(75, 20);
+            this.browseBtn.Size = new System.Drawing.Size(75, 21);
             this.browseBtn.TabIndex = 1;
             this.browseBtn.Text = "Browse";
             this.browseBtn.UseVisualStyleBackColor = true;
@@ -76,7 +73,7 @@
             // 
             // UploadBtn
             // 
-            this.UploadBtn.Location = new System.Drawing.Point(87, 218);
+            this.UploadBtn.Location = new System.Drawing.Point(81, 160);
             this.UploadBtn.Name = "UploadBtn";
             this.UploadBtn.Size = new System.Drawing.Size(112, 42);
             this.UploadBtn.TabIndex = 3;
@@ -89,7 +86,7 @@
             this.comPortComboBox.FormattingEnabled = true;
             this.comPortComboBox.Location = new System.Drawing.Point(25, 84);
             this.comPortComboBox.Name = "comPortComboBox";
-            this.comPortComboBox.Size = new System.Drawing.Size(121, 21);
+            this.comPortComboBox.Size = new System.Drawing.Size(146, 21);
             this.comPortComboBox.TabIndex = 4;
             this.comPortComboBox.SelectedIndexChanged += new System.EventHandler(this.comPortComboBox_SelectedIndexChanged);
             this.comPortComboBox.Click += new System.EventHandler(this.comPortComboBox_Click);
@@ -103,27 +100,10 @@
             this.comPortLabel.TabIndex = 5;
             this.comPortLabel.Text = "COM Port";
             // 
-            // hostZigBeeAddressLbl
-            // 
-            this.hostZigBeeAddressLbl.AutoSize = true;
-            this.hostZigBeeAddressLbl.Location = new System.Drawing.Point(22, 108);
-            this.hostZigBeeAddressLbl.Name = "hostZigBeeAddressLbl";
-            this.hostZigBeeAddressLbl.Size = new System.Drawing.Size(107, 13);
-            this.hostZigBeeAddressLbl.TabIndex = 6;
-            this.hostZigBeeAddressLbl.Text = "Host ZigBee Address";
-            // 
-            // hostZigBeeAddressTextBox
-            // 
-            this.hostZigBeeAddressTextBox.Location = new System.Drawing.Point(25, 125);
-            this.hostZigBeeAddressTextBox.Name = "hostZigBeeAddressTextBox";
-            this.hostZigBeeAddressTextBox.Size = new System.Drawing.Size(146, 20);
-            this.hostZigBeeAddressTextBox.TabIndex = 7;
-            this.hostZigBeeAddressTextBox.WordWrap = false;
-            // 
             // targetZigBeeAddressLbl
             // 
             this.targetZigBeeAddressLbl.AutoSize = true;
-            this.targetZigBeeAddressLbl.Location = new System.Drawing.Point(22, 148);
+            this.targetZigBeeAddressLbl.Location = new System.Drawing.Point(22, 108);
             this.targetZigBeeAddressLbl.Name = "targetZigBeeAddressLbl";
             this.targetZigBeeAddressLbl.Size = new System.Drawing.Size(116, 13);
             this.targetZigBeeAddressLbl.TabIndex = 8;
@@ -131,21 +111,12 @@
             // 
             // targetZigBeeAddressTextBox
             // 
-            this.targetZigBeeAddressTextBox.Location = new System.Drawing.Point(25, 165);
+            this.targetZigBeeAddressTextBox.Location = new System.Drawing.Point(25, 125);
             this.targetZigBeeAddressTextBox.Name = "targetZigBeeAddressTextBox";
             this.targetZigBeeAddressTextBox.Size = new System.Drawing.Size(146, 20);
             this.targetZigBeeAddressTextBox.TabIndex = 9;
             this.targetZigBeeAddressTextBox.WordWrap = false;
-            // 
-            // updateAddressesBtn
-            // 
-            this.updateAddressesBtn.Location = new System.Drawing.Point(177, 136);
-            this.updateAddressesBtn.Name = "updateAddressesBtn";
-            this.updateAddressesBtn.Size = new System.Drawing.Size(87, 36);
-            this.updateAddressesBtn.TabIndex = 10;
-            this.updateAddressesBtn.Text = "Update Addresses";
-            this.updateAddressesBtn.UseVisualStyleBackColor = true;
-            this.updateAddressesBtn.Click += new System.EventHandler(this.updateAddressesBtn_Click);
+            this.targetZigBeeAddressTextBox.Leave += new System.EventHandler(this.targetZigBeeAddressTextBox_Leave);
             // 
             // backgroundWorker
             // 
@@ -156,12 +127,9 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(289, 289);
-            this.Controls.Add(this.updateAddressesBtn);
+            this.ClientSize = new System.Drawing.Size(274, 225);
             this.Controls.Add(this.targetZigBeeAddressTextBox);
             this.Controls.Add(this.targetZigBeeAddressLbl);
-            this.Controls.Add(this.hostZigBeeAddressTextBox);
-            this.Controls.Add(this.hostZigBeeAddressLbl);
             this.Controls.Add(this.comPortLabel);
             this.Controls.Add(this.comPortComboBox);
             this.Controls.Add(this.UploadBtn);
@@ -184,11 +152,8 @@
         private System.Windows.Forms.Button UploadBtn;
         private System.Windows.Forms.Label comPortLabel;
         private System.Windows.Forms.ComboBox comPortComboBox;
-        private System.Windows.Forms.Label hostZigBeeAddressLbl;
-        private System.Windows.Forms.TextBox hostZigBeeAddressTextBox;
         private System.Windows.Forms.Label targetZigBeeAddressLbl;
         private System.Windows.Forms.TextBox targetZigBeeAddressTextBox;
-        private System.Windows.Forms.Button updateAddressesBtn;
         private System.ComponentModel.BackgroundWorker backgroundWorker;
     }
 }
